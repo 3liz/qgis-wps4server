@@ -1,0 +1,5 @@
+<RCC>
+    <qresource prefix="/plugins/wps4server" >
+        <file>icon.png</file>
+    </qresource>
+</RCC>

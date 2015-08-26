@@ -125,4 +125,4 @@ $ sudo service apache2 restart
 Test
 _____
 
-Open the link: http://localhost/qgis_mapserv.fcgi?SERVICE=WPS&REQUEST=GetCapabilities
+Open the link: **http://localhost/qgis_mapserv.fcgi?SERVICE=WPS&REQUEST=GetCapabilities**

@@ -1,0 +1,32 @@
+include setup.py
+include ChangeLog
+include LICENSE
+include AUTHORS
+include INSTALL
+include README
+include SUBMITTING
+
+graft pywps/Wps
+graft pywps/processes
+graft pywps/etc
+graft pywps/Parser
+graft pywps/Process
+graft pywps/Templates
+graft doc
+
+global-exclude *.pyc
+global-exclude *~
+global-exclude *.swp
+global-exclude *.toc
+global-exclude *.bak
+global-exclude *.dvi
+global-exclude *.log
+global-exclude *.aux
+global-exclude *.tmplc
+
+exclude doc/*.out
+
+global-include *.cfg
+global-include README
+global-include AUTHORS
+global-include INSTALL
