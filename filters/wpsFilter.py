@@ -369,10 +369,10 @@ class wpsFilter(QgsServerFilter):
             request_body = params.get('REQUEST_BODY', '')
             
             # get config
-            configPath = ''
-            if 'config' in params :
+            configPath = os.getenv("PYWPS_CFG")
+            if not configPath and 'config' in params :
                 configPath = params['config']
-            elif 'CONFIG' in params :
+            elif not configPath and 'CONFIG' in params :
                 configPath = params['CONFIG']
             
             if configPath :
@@ -412,10 +412,10 @@ class wpsFilter(QgsServerFilter):
                         Processing.loadAlgorithms()
 
                 # get QGIS project path
-                projectPath = ''
-                if 'map' in params :
+                projectPath = os.getenv("QGIS_PROJECT_FILE")
+                if not projectPath and 'map' in params :
                     projectPath = params['map']
-                elif 'MAP' in params :
+                elif not projectPath and 'MAP' in params :
                     projectPath = params['MAP']
                 #projectFolder
                 projectFolder = ''
