@@ -221,16 +221,16 @@ def QGISProcessFactory(alg_name, project='', vectors=[], rasters=[]):
             if parm.__class__.__name__ == 'ParameterVector':
                 values = []
                 if vectorLayers and ParameterVector.VECTOR_TYPE_ANY in parm.shapetype :
-                    values = [l['name'] for l in vectorLayers]
+                    values = [l for l in vectorLayers]
                 elif vectorLayers :
                     if ParameterVector.VECTOR_TYPE_POINT in parm.shapetype :
-                        values += [l['name'] for l in vectorLayers if l['geometry'] == 'Point']
+                        values += [l for l in vectorLayers if l['geometry'] == 'Point']
                     if ParameterVector.VECTOR_TYPE_LINE in parm.shapetype :
-                        values += [l['name'] for l in vectorLayers if l['geometry'] == 'Line']
+                        values += [l for l in vectorLayers if l['geometry'] == 'Line']
                     if ParameterVector.VECTOR_TYPE_POLYGON in parm.shapetype :
-                        values += [l['name'] for l in vectorLayers if l['geometry'] == 'Polygon']
+                        values += [l for l in vectorLayers if l['geometry'] == 'Polygon']
                 if values :
-                    layerName = v.getValue() 
+                    layerName = v.getValue()
                     values = [l for l in values if l['name'] == layerName]
                     l = values[0]
                     layer = QgsVectorLayer( l['datasource'], l['name'], l['provider'] )
@@ -309,6 +309,8 @@ def QGISProcessFactory(alg_name, project='', vectors=[], rasters=[]):
                 outputInfo = QFileInfo( outputName )
                 # get the output QGIS vector layer
                 outputLayer = QgsVectorLayer( outputName, outputInfo.baseName(), 'ogr' )
+                # Update CRS
+                outputLayer.setCrs( tAlg.crs )
                 # create the output GML file for pywps
                 # define the output GML file path
                 outputFile = os.path.join( outputInfo.absolutePath(), outputInfo.baseName()+'.gml' )
@@ -421,7 +423,7 @@ class wpsFilter(QgsServerFilter):
                 projectFolder = ''
                 if projectPath and os.path.exists( projectPath ) :
                     projectFolder = os.path.dirname( projectPath )
-                QgsMessageLog.logMessage("projectPath "+projectPath)
+                QgsMessageLog.logMessage("projectPath "+str(projectPath))
                 rasterLayers = []
                 vectorLayers = []
                 if projectPath and os.path.exists( projectPath ) :
