@@ -126,3 +126,23 @@ Test
 _____
 
 Open the link: **http://localhost/qgis_mapserv.fcgi?SERVICE=WPS&REQUEST=GetCapabilities**
+
+Configuration
+---------------
+
+wps4server plugin uses an extended PyWPS config file. You will find the default configuration file and an example:
+* filters/PyWPS/pywps/default.cfg
+* filters/PyWPS/pywps/buffer.cfg
+
+A wps4server configuration file has at least 4 sections:
+* **wps** contains general WPS instance settings
+* **provider** contains information about you, your organization and so on
+* **server** contains server settings, constraints, safety configuration and so on
+* **qgis** contains specific QGIS settings
+
+The **qgis** section contains:
+* **qgisserveraddress** for accessing output data as a service
+* **processing_folder** the directory to find models, scripts and rscripts; the default path is ~/.qgis2/processing
+* **providers** the processes provider list to publish through WPS; by default all processes providers are published; you can select in this list *qgis,gdalogr,script,model,r,grass,grass70,saga,otb*
+* **algs_filter** a string to filter processes based on name and title
+* **algs** a list of processes to publish; for example *qgis:fixeddistancebuffer,qgis:delaunaytriangulation,qgis:concavehull*
