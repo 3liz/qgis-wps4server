@@ -150,3 +150,12 @@ The **qgis** section contains:
 To use an other config file than the default one, you can use:
 * **CONFIG** parameter in the URL
 * **PYWPS_CFG** environmental param
+
+Use default data
+------------------
+
+wps4server is able to use server geodata, which datasource is defined in a QGIS project files. The project can be the same that you use for WMS, WFS or WCS.
+
+To use a QGIS project, you can use:
+* **MAP** parameter in the URL, like for the others OGC Web Services
+* **QGIS_PROJECT_FILE** environmental param
