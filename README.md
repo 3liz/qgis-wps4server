@@ -146,3 +146,7 @@ The **qgis** section contains:
 * **providers** the processes provider list to publish through WPS; by default all processes providers are published; you can select in this list *qgis,gdalogr,script,model,r,grass,grass70,saga,otb*
 * **algs_filter** a string to filter processes based on name and title
 * **algs** a list of processes to publish; for example *qgis:fixeddistancebuffer,qgis:delaunaytriangulation,qgis:concavehull*
+
+To use an other config file than the default one, you can use:
+* **CONFIG** parameter in the URL
+* **PYWPS_CFG** environmental param
