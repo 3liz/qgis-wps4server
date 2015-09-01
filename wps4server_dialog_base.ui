@@ -23,9 +23,9 @@
       <property name="geometry">
        <rect>
         <x>0</x>
-        <y>-183</y>
+        <y>-838</y>
         <width>403</width>
-        <height>649</height>
+        <height>1304</height>
        </rect>
       </property>
       <layout class="QVBoxLayout" name="verticalLayout_5">
@@ -133,105 +133,333 @@
          <layout class="QVBoxLayout" name="verticalLayout_3">
           <item>
            <layout class="QGridLayout" name="gridLayout_2">
-            <item row="4" column="1">
-             <widget class="QLineEdit" name="lineEdit_5"/>
+            <item row="5" column="1">
+             <widget class="QLineEdit" name="inDeliveryPoint"/>
             </item>
             <item row="0" column="1">
-             <widget class="QLineEdit" name="lineEdit"/>
+             <widget class="QLineEdit" name="inProviderName"/>
             </item>
             <item row="0" column="0">
-             <widget class="QLabel" name="label">
+             <widget class="QLabel" name="lProviderName">
               <property name="text">
                <string>Company</string>
               </property>
              </widget>
             </item>
             <item row="3" column="1">
-             <widget class="QLineEdit" name="lineEdit_4"/>
+             <widget class="QLineEdit" name="inPositionName"/>
             </item>
             <item row="2" column="0">
-             <widget class="QLabel" name="label_2">
+             <widget class="QLabel" name="lIndividualName">
               <property name="text">
                <string>Name</string>
               </property>
              </widget>
             </item>
             <item row="1" column="1">
-             <widget class="QLineEdit" name="lineEdit_2"/>
+             <widget class="QLineEdit" name="inProviderSite"/>
             </item>
             <item row="2" column="1">
-             <widget class="QLineEdit" name="lineEdit_3"/>
+             <widget class="QLineEdit" name="inIndividualName"/>
             </item>
             <item row="1" column="0">
-             <widget class="QLabel" name="label_3">
+             <widget class="QLabel" name="lProviderSite">
               <property name="text">
                <string>Website</string>
               </property>
              </widget>
             </item>
-            <item row="5" column="1">
-             <widget class="QLineEdit" name="lineEdit_6"/>
-            </item>
             <item row="6" column="1">
-             <widget class="QLineEdit" name="lineEdit_7"/>
+             <widget class="QLineEdit" name="inCity"/>
             </item>
             <item row="7" column="1">
-             <widget class="QLineEdit" name="lineEdit_8"/>
+             <widget class="QLineEdit" name="inPostalCode"/>
             </item>
             <item row="8" column="1">
-             <widget class="QLineEdit" name="lineEdit_9"/>
+             <widget class="QLineEdit" name="inCountry"/>
             </item>
             <item row="9" column="1">
-             <widget class="QLineEdit" name="lineEdit_10"/>
+             <widget class="QLineEdit" name="inElectronicMailAddress"/>
+            </item>
+            <item row="12" column="1">
+             <widget class="QLineEdit" name="inHoursofservice"/>
             </item>
             <item row="3" column="0">
-             <widget class="QLabel" name="label_4">
+             <widget class="QLabel" name="lPositionName">
               <property name="text">
                <string>Position</string>
               </property>
              </widget>
             </item>
-            <item row="4" column="0">
-             <widget class="QLabel" name="label_5">
+            <item row="5" column="0">
+             <widget class="QLabel" name="lDeliveryPoint">
               <property name="text">
                <string>Street</string>
               </property>
              </widget>
             </item>
-            <item row="5" column="0">
-             <widget class="QLabel" name="label_6">
+            <item row="6" column="0">
+             <widget class="QLabel" name="lCity">
               <property name="text">
                <string>City</string>
               </property>
              </widget>
             </item>
-            <item row="6" column="0">
-             <widget class="QLabel" name="label_7">
+            <item row="7" column="0">
+             <widget class="QLabel" name="lPostalCode">
               <property name="text">
                <string>Postal code</string>
               </property>
              </widget>
             </item>
-            <item row="7" column="0">
-             <widget class="QLabel" name="label_8">
+            <item row="8" column="0">
+             <widget class="QLabel" name="lCountry">
               <property name="text">
                <string>Country</string>
               </property>
              </widget>
             </item>
-            <item row="8" column="0">
-             <widget class="QLabel" name="label_9">
+            <item row="9" column="0">
+             <widget class="QLabel" name="lElectronicMailAddress">
               <property name="text">
                <string>Email</string>
               </property>
              </widget>
             </item>
-            <item row="9" column="0">
-             <widget class="QLabel" name="label_10">
+            <item row="12" column="0">
+             <widget class="QLabel" name="lHoursofservice">
               <property name="text">
                <string>Hours</string>
               </property>
              </widget>
+            </item>
+            <item row="4" column="1">
+             <widget class="QLineEdit" name="inRole"/>
+            </item>
+            <item row="4" column="0">
+             <widget class="QLabel" name="lRole">
+              <property name="text">
+               <string>Role</string>
+              </property>
+             </widget>
+            </item>
+            <item row="10" column="0">
+             <widget class="QLabel" name="lPhoneVoice">
+              <property name="text">
+               <string>Phone</string>
+              </property>
+             </widget>
+            </item>
+            <item row="11" column="0">
+             <widget class="QLabel" name="lPhoneFacsimile">
+              <property name="text">
+               <string>Facs</string>
+              </property>
+             </widget>
+            </item>
+            <item row="10" column="1">
+             <widget class="QLineEdit" name="inPhoneVoice"/>
+            </item>
+            <item row="11" column="1">
+             <widget class="QLineEdit" name="inPhoneFacsimile"/>
+            </item>
+           </layout>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
+        <widget class="QGroupBox" name="ServerGroupBox">
+         <property name="title">
+          <string>Server</string>
+         </property>
+         <layout class="QVBoxLayout" name="verticalLayout_4">
+          <item>
+           <layout class="QGridLayout" name="gridLayout_3">
+            <item row="0" column="0">
+             <widget class="QLabel" name="lMaxoperations">
+              <property name="text">
+               <string>Max. Ope</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="0">
+             <widget class="QLabel" name="lMaxinputparamlength">
+              <property name="text">
+               <string>Max. input length</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="1">
+             <widget class="QLineEdit" name="inMaxfilesize">
+              <property name="text">
+               <string>3mb</string>
+              </property>
+             </widget>
+            </item>
+            <item row="5" column="1">
+             <widget class="QLineEdit" name="inOutputUrl">
+              <property name="text">
+               <string>http://localhost/wps/wpsoutputs</string>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="1">
+             <widget class="QLineEdit" name="inTempPath">
+              <property name="text">
+               <string>/tmp</string>
+              </property>
+             </widget>
+            </item>
+            <item row="4" column="1">
+             <widget class="QLineEdit" name="inOutputPath">
+              <property name="text">
+               <string>/var/www/wps/wpsoutputs</string>
+              </property>
+             </widget>
+            </item>
+            <item row="6" column="1">
+             <widget class="QLineEdit" name="inLogFile">
+              <property name="text">
+               <string>/tmp/pywps.log</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="1">
+             <widget class="QSpinBox" name="inMaxoperations">
+              <property name="value">
+               <number>30</number>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="1">
+             <widget class="QSpinBox" name="inMaxinputparamlength">
+              <property name="maximum">
+               <number>11000</number>
+              </property>
+              <property name="value">
+               <number>1024</number>
+              </property>
+             </widget>
+            </item>
+            <item row="7" column="1">
+             <widget class="QComboBox" name="cbLogLevel"/>
+            </item>
+            <item row="2" column="0">
+             <widget class="QLabel" name="lMaxfilesize">
+              <property name="text">
+               <string>Max. file size</string>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="0">
+             <widget class="QLabel" name="lTempPath">
+              <property name="text">
+               <string>Temp path</string>
+              </property>
+             </widget>
+            </item>
+            <item row="4" column="0">
+             <widget class="QLabel" name="lOutputPath">
+              <property name="text">
+               <string>Output path</string>
+              </property>
+             </widget>
+            </item>
+            <item row="5" column="0">
+             <widget class="QLabel" name="lOutputUrl">
+              <property name="text">
+               <string>Output URL</string>
+              </property>
+             </widget>
+            </item>
+            <item row="6" column="0">
+             <widget class="QLabel" name="lLogFile">
+              <property name="text">
+               <string>Log file</string>
+              </property>
+             </widget>
+            </item>
+            <item row="7" column="0">
+             <widget class="QLabel" name="lLogLevel">
+              <property name="text">
+               <string>Log level</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
+        <widget class="QGroupBox" name="groupBox">
+         <property name="title">
+          <string>QGIS</string>
+         </property>
+         <layout class="QVBoxLayout" name="verticalLayout_6">
+          <item>
+           <layout class="QGridLayout" name="gridLayout_4">
+            <item row="0" column="0">
+             <widget class="QLabel" name="lQgisserveraddress">
+              <property name="text">
+               <string>Server address</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="1">
+             <widget class="QLineEdit" name="inQgisserveraddress">
+              <property name="text">
+               <string>http://localhost/cgi-bin/qgis_mapserv.fcgi</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="0">
+             <widget class="QLabel" name="lProviders">
+              <property name="text">
+               <string>Providers</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="0">
+             <widget class="QLabel" name="lProcessing_folder">
+              <property name="text">
+               <string>Processing folder</string>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="0">
+             <widget class="QLabel" name="lAlgs_filter">
+              <property name="text">
+               <string>Algorithms filter</string>
+              </property>
+             </widget>
+            </item>
+            <item row="4" column="0">
+             <widget class="QLabel" name="lAlgs">
+              <property name="text">
+               <string>Algorithms list</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="1">
+             <widget class="QLineEdit" name="inProcessing_folder">
+              <property name="text">
+               <string>/home/qgis/.qgis2/processing</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="1">
+             <widget class="QLineEdit" name="inProviders"/>
+            </item>
+            <item row="3" column="1">
+             <widget class="QLineEdit" name="inAlgs_filter"/>
+            </item>
+            <item row="4" column="1">
+             <widget class="QPlainTextEdit" name="inAlgs"/>
             </item>
            </layout>
           </item>
