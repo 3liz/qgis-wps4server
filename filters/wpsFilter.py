@@ -376,6 +376,7 @@ class wpsFilter(QgsServerFilter):
                 configPath = params['config']
             elif not configPath and 'CONFIG' in params :
                 configPath = params['CONFIG']
+            QgsMessageLog.logMessage("configPath "+str(configPath))
             
             if configPath :
                 os.environ["PYWPS_CFG"] = configPath
@@ -483,6 +484,15 @@ class wpsFilter(QgsServerFilter):
                     qgisaddress = 'https://'+qgisaddress
                 else :
                     qgisaddress = 'http://'+qgisaddress
+                qgisaddress = qgisaddress+'?'
+                if 'map' in params :
+                    qgisaddress = qgisaddress +'map='+ params['map'] +'&'
+                elif 'MAP' in params :
+                    qgisaddress = qgisaddress +'MAP='+ params['MAP'] +'&'
+                if 'config' in params :
+                    qgisaddress = qgisaddress +'config='+ params['config'] +'&'
+                elif 'CONFIG' in params :
+                    qgisaddress = qgisaddress +'CONFIG='+ params['CONFIG'] +'&'
                 #pywpsConfig.setConfigValue("wps","serveraddress", qgisaddress)
                 #QgsMessageLog.logMessage("qgisaddress "+qgisaddress)
                 #pywpsConfig.setConfigValue("qgis","qgisserveraddress", qgisaddress)
@@ -509,7 +519,12 @@ class wpsFilter(QgsServerFilter):
                         request.clearBody()
                         #request.setHeader('Content-type', 'text/xml')
                         request.setInfoFormat(wps.request.contentType)
-                        request.appendBody(wps.response)
+                        resp = wps.response
+                        import re
+                        import xml.sax.saxutils as saxutils
+                        resp = re.sub(r'Get xlink:href=".*"', 'Get xlink:href="'+saxutils.escape(qgisaddress)+'"', resp)
+                        resp = re.sub(r'Post xlink:href=".*"', 'Post xlink:href="'+saxutils.escape(qgisaddress)+'"', resp)
+                        request.appendBody(resp)
             except WPSException,e:
                         request.clearHeaders()
                         #request.setHeader('Content-type', 'text/xml')
