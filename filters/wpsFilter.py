@@ -37,7 +37,7 @@ from processing.core.ProcessingConfig import ProcessingConfig, Setting
 from processing.core.parameters import *
 from processing.tools.general import *
 
-def QGISProcessFactory(alg_name, project='', vectors=[], rasters=[]):
+def QGISProcessFactory(alg_name, project='', vectors=[], rasters=[], crss=[]):
     """This is the bridge between SEXTANTE and PyWPS:
     it creates PyWPS processes based on SEXTANTE alg name"""
     from pywps.Process import WPSProcess
@@ -116,6 +116,9 @@ def QGISProcessFactory(alg_name, project='', vectors=[], rasters=[]):
             elif parm.__class__.__name__ == 'ParameterExtent':
                 self._inputs['Input%s' % i] = self.addBBoxInput(escape(parm.name), '<![CDATA[' + parm.description + ']]>',
                     minOccurs=minOccurs)
+                # Add supported CRSs from project or config
+                if crss:
+                    self._inputs['Input%s' % i].crss = crss
                     
             elif parm.__class__.__name__ == 'ParameterSelection':
                 self._inputs['Input%s' % i] = self.addLiteralInput(escape(parm.name), '<![CDATA[' + parm.description + ']]>',
@@ -215,9 +218,12 @@ def QGISProcessFactory(alg_name, project='', vectors=[], rasters=[]):
         # Run alg with params
         # TODO: get args
         args = {}
+        # get vector and raster inputs
+        inputCrs = None
         for k in self._inputs:
             v = getattr(self, k)
             parm = self.alg.getParameterFromName( v.identifier )
+            # vector layers
             if parm.__class__.__name__ == 'ParameterVector':
                 values = []
                 if vectorLayers and ParameterVector.VECTOR_TYPE_ANY in parm.shapetype :
@@ -234,8 +240,18 @@ def QGISProcessFactory(alg_name, project='', vectors=[], rasters=[]):
                     values = [l for l in values if l['name'] == layerName]
                     l = values[0]
                     layer = QgsVectorLayer( l['datasource'], l['name'], l['provider'] )
+                    crs = l['crs']
+                    qgsCrs = None
+                    if str(crs).startswith('USER:') :
+                        qgsCrs = QgsCoordinateReferenceSystem()
+                        qgsCrs.createFromProj4( str(l['proj4']) )
+                    else :
+                        qgsCrs = QgsCoordinateReferenceSystem(crs, QgsCoordinateReferenceSystem.EpsgCrsId)
+                    if qgsCrs :
+                        layer.setCrs( qgsCrs )
                     mlr.addMapLayer( layer, False )
                     args[v.identifier] = layer
+                    inputCrs = layer.crs()
                 else :
                     fileName = v.getValue()
                     fileInfo = QFileInfo( fileName )
@@ -252,7 +268,8 @@ def QGISProcessFactory(alg_name, project='', vectors=[], rasters=[]):
                     e = layer.extent()
                     mlr.addMapLayer( layer, False )
                     args[v.identifier] = layer
-                    
+                    inputCrs = layer.crs()
+            # raster layers
             elif parm.__class__.__name__ == 'ParameterRaster':
                 if rasterLayers :
                     layerName = v.getValue() 
@@ -262,7 +279,7 @@ def QGISProcessFactory(alg_name, project='', vectors=[], rasters=[]):
                     crs = l['crs']
                     qgsCrs = None
                     if str(crs).startswith('USER:') :
-                        qgsCrs = crs = QgsCoordinateReferenceSystem()
+                        qgsCrs = QgsCoordinateReferenceSystem()
                         qgsCrs.createFromProj4( str(l['proj4']) )
                     else :
                         qgsCrs = QgsCoordinateReferenceSystem(crs, QgsCoordinateReferenceSystem.EpsgCrsId)
@@ -270,18 +287,33 @@ def QGISProcessFactory(alg_name, project='', vectors=[], rasters=[]):
                         layer.setCrs( qgsCrs )
                     mlr.addMapLayer( layer, False )
                     args[v.identifier] = layer
+                    inputCrs = layer.crs()
                 else :
                     fileName = v.getValue()
                     fileInfo = QFileInfo( fileName )
                     layer = QgsRasterLayer( fileName, fileInfo.baseName(), 'gdal' )
                     mlr.addMapLayer( layer, False )
                     args[v.identifier] = layer
-                    
+                    inputCrs = layer.crs()
             elif parm.__class__.__name__ == 'ParameterExtent':
                 coords = v.getValue().coords
                 args[v.identifier] = str(coords[0][0])+','+str(coords[1][0])+','+str(coords[0][1])+','+str(coords[1][1])
             else:
                 args[v.identifier] = v.getValue()
+        
+        # if extent in inputs, transform it to the alg CRS
+        if inputCrs:
+            for k in self._inputs:
+                v = getattr(self, k)
+                parm = self.alg.getParameterFromName( v.identifier )
+                if parm.__class__.__name__ == 'ParameterExtent':
+                    coords = v.getValue().coords
+                    coordCrs = QgsCoordinateReferenceSystem( str( v.getValue().crs ) )
+                    coordExtent = QgsRectangle( coords[0][0], coords[0][1], coords[1][0], coords[1][1] )
+                    xform = QgsCoordinateTransform( coordCrs, inputCrs )
+                    coordExtent = xform.transformBoundingBox( coordExtent )
+                    args[v.identifier] = str(coordExtent.xMinimum())+','+str(coordExtent.xMaximum())+','+str(coordExtent.yMinimum())+','+str(coordExtent.yMaximum())
+        
         # Adds None for output parameter(s)
         for k in self._outputs:
             v = getattr(self, k)
@@ -427,6 +459,7 @@ class wpsFilter(QgsServerFilter):
                 QgsMessageLog.logMessage("projectPath "+str(projectPath))
                 rasterLayers = []
                 vectorLayers = []
+                crsList = []
                 if projectPath and os.path.exists( projectPath ) :
                     p_dom = minidom.parse( projectPath )
                     for ml in p_dom.getElementsByTagName('maplayer') :
@@ -456,6 +489,17 @@ class wpsFilter(QgsServerFilter):
                         elif l['type'] == "vector" :
                             l['geometry'] = ml.attributes["geometry"].value
                             vectorLayers.append( l )
+                    deafultCrs = ''
+                    for mapcanvas in p_dom.getElementsByTagName('mapcanvas'):
+                        for destinationsrs in mapcanvas.getElementsByTagName('destinationsrs'):
+                            for authid in destinationsrs.getElementsByTagName('authid'):
+                                defaultCrs = authid.childNodes[0].data
+                                crsList.append( defaultCrs )
+                    for wmsCrsList in p_dom.getElementsByTagName('WMSCrsList') :
+                        for wmsCrs in wmsCrsList.getElementsByTagName('value') :
+                            wmsCrsValue = wmsCrs.childNodes[0].data
+                            if wmsCrsValue and wmsCrsValue != defaultCrs:
+                                crsList.append( wmsCrsValue )
                 
                         
                 processes = [None] # if no processes found no processes return (deactivate default pywps process)
@@ -474,7 +518,7 @@ class wpsFilter(QgsServerFilter):
                             if algsFilter.lower() not in alg.name.lower() and algsFilter.lower() not in m.lower():
                                 continue
                         #QgsMessageLog.logMessage("provider "+i+" "+m)
-                        processes.append(QGISProcessFactory(m, projectPath, vectorLayers, rasterLayers))
+                        processes.append(QGISProcessFactory(m, projectPath, vectorLayers, rasterLayers, crsList))
                 
                 #pywpsConfig.setConfigValue("server","outputPath", '/tmp/wpsoutputs')
                 #pywpsConfig.setConfigValue("server","logFile", '/tmp/pywps.log')
