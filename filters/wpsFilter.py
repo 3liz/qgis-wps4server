@@ -246,7 +246,7 @@ def QGISProcessFactory(alg_name, project='', vectors=[], rasters=[], crss=[]):
                         qgsCrs = QgsCoordinateReferenceSystem()
                         qgsCrs.createFromProj4( str(l['proj4']) )
                     else :
-                        qgsCrs = QgsCoordinateReferenceSystem(crs, QgsCoordinateReferenceSystem.EpsgCrsId)
+                        qgsCrs = QgsCoordinateReferenceSystem( str(crs) )
                     if qgsCrs :
                         layer.setCrs( qgsCrs )
                     mlr.addMapLayer( layer, False )
@@ -282,7 +282,7 @@ def QGISProcessFactory(alg_name, project='', vectors=[], rasters=[], crss=[]):
                         qgsCrs = QgsCoordinateReferenceSystem()
                         qgsCrs.createFromProj4( str(l['proj4']) )
                     else :
-                        qgsCrs = QgsCoordinateReferenceSystem(crs, QgsCoordinateReferenceSystem.EpsgCrsId)
+                        qgsCrs = QgsCoordinateReferenceSystem( str(crs) )
                     if qgsCrs :
                         layer.setCrs( qgsCrs )
                     mlr.addMapLayer( layer, False )
@@ -342,12 +342,20 @@ def QGISProcessFactory(alg_name, project='', vectors=[], rasters=[], crss=[]):
                 # get the output QGIS vector layer
                 outputLayer = QgsVectorLayer( outputName, outputInfo.baseName(), 'ogr' )
                 # Update CRS
-                outputLayer.setCrs( tAlg.crs )
-                # create the output GML file for pywps
-                # define the output GML file path
-                outputFile = os.path.join( outputInfo.absolutePath(), outputInfo.baseName()+'.gml' )
+                # outputLayer.setCrs( tAlg.crs )
+                # define the file extension
+                outputExt = 'gml'
+                if v.format['mimetype'] == 'application/json':
+                    outputExt = 'geojson'
+                # define the output file path
+                outputFile = os.path.join( outputInfo.absolutePath(), outputInfo.baseName()+'.'+outputExt )
                 # write the output GML file
-                error = QgsVectorFileWriter.writeAsVectorFormat( outputLayer, outputFile, 'utf-8', None, 'GML', False, None, ['XSISCHEMAURI=http://schemas.opengis.net/gml/2.1.2/feature.xsd'] )
+                if v.format['mimetype'] == 'application/json':
+                    error = QgsVectorFileWriter.writeAsVectorFormat( outputLayer, outputFile, 'utf-8', None, 'GeoJSON', False, None )
+                elif v.format['mimetype'] in ('text/xml; subtype=gml/3.1.1','application/gml+xml; version=3.1.1') :
+                    error = QgsVectorFileWriter.writeAsVectorFormat( outputLayer, outputFile, 'utf-8', None, 'GML', False, None, ['XSISCHEMAURI=http://schemas.opengis.net/gml/3.1.1/base/feature.xsd','FORMAT=GML3'] )
+                else:
+                    error = QgsVectorFileWriter.writeAsVectorFormat( outputLayer, outputFile, 'utf-8', None, 'GML', False, None, ['XSISCHEMAURI=http://schemas.opengis.net/gml/2.1.2/feature.xsd'] )
                 args[v.identifier] = outputFile
                 # add output layer to map layer registry
                 #outputLayer = QgsVectorLayer( outputFile, v.identifier, 'ogr' )
@@ -564,11 +572,16 @@ class wpsFilter(QgsServerFilter):
                         #request.setHeader('Content-type', 'text/xml')
                         request.setInfoFormat(wps.request.contentType)
                         resp = wps.response
-                        import re
-                        import xml.sax.saxutils as saxutils
-                        resp = re.sub(r'Get xlink:href=".*"', 'Get xlink:href="'+saxutils.escape(qgisaddress)+'"', resp)
-                        resp = re.sub(r'Post xlink:href=".*"', 'Post xlink:href="'+saxutils.escape(qgisaddress)+'"', resp)
-                        request.appendBody(resp)
+                        if wps.request.contentType == 'application/xml':
+                            import re
+                            import xml.sax.saxutils as saxutils
+                            resp = re.sub(r'Get xlink:href=".*"', 'Get xlink:href="'+saxutils.escape(qgisaddress)+'"', resp)
+                            resp = re.sub(r'Post xlink:href=".*"', 'Post xlink:href="'+saxutils.escape(qgisaddress)+'"', resp)
+                        # test response type
+                        if isinstance( resp, str ):
+                            request.appendBody(resp)
+                        elif isinstance( resp, file ) :
+                            request.appendBody(resp.read())
             except WPSException,e:
                         request.clearHeaders()
                         #request.setHeader('Content-type', 'text/xml')
