@@ -315,7 +315,7 @@ def QGISProcessFactory(alg_name, project='', vectors=[], rasters=[], crss=[]):
                         coordCrs = QgsCoordinateReferenceSystem( str( crss[0] ) )
                     else:
                         QgsCoordinateReferenceSystem( 'EPSG:4326' )
-                    if coordcrs:
+                    if coordCrs:
                         coordExtent = QgsRectangle( coords[0][0], coords[0][1], coords[1][0], coords[1][1] )
                         xform = QgsCoordinateTransform( coordCrs, inputCrs )
                         coordExtent = xform.transformBoundingBox( coordExtent )
