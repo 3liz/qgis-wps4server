@@ -578,10 +578,10 @@ class wpsFilter(QgsServerFilter):
                             resp = re.sub(r'Get xlink:href=".*"', 'Get xlink:href="'+saxutils.escape(qgisaddress)+'"', resp)
                             resp = re.sub(r'Post xlink:href=".*"', 'Post xlink:href="'+saxutils.escape(qgisaddress)+'"', resp)
                         # test response type
-                        if isinstance( resp, str ):
-                            request.appendBody(resp)
-                        elif isinstance( resp, file ) :
+                        if isinstance( resp, file ) :
                             request.appendBody(resp.read())
+                        else:
+                            request.appendBody(resp)
             except WPSException,e:
                         request.clearHeaders()
                         #request.setHeader('Content-type', 'text/xml')
