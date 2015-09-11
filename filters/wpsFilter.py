@@ -179,6 +179,12 @@ def QGISProcessFactory(alg_name, project='', vectors=[], rasters=[], crss=[]):
                     },{
                         'mimeType':'application/json',
                         'encoding': 'utf-8'
+                    },{
+                        'mimeType':'application/x-zipped-shp',
+                        'encoding': 'utf-8'
+                    },{
+                        'mimeType':'application/x-zipped-tab',
+                        'encoding': 'utf-8'
                     }]
                 )
                 if pywpsConfig.getConfigValue("qgis","qgisserveraddress") :
@@ -362,10 +368,53 @@ def QGISProcessFactory(alg_name, project='', vectors=[], rasters=[], crss=[]):
                 outputExt = 'gml'
                 if v.format['mimetype'] == 'application/json':
                     outputExt = 'geojson'
+                elif v.format['mimetype'] == 'application/x-zipped-shp':
+                    outputExt = 'shp'
+                elif v.format['mimetype'] == 'application/x-zipped-tab':
+                    outputExt = 'tab'
                 # define the output file path
                 outputFile = os.path.join( outputInfo.absolutePath(), outputInfo.baseName()+'.'+outputExt )
                 # write the output GML file
-                if v.format['mimetype'] == 'application/json':
+                if v.format['mimetype'] == 'application/x-zipped-shp':
+                    if destCrs :
+                        outputFile = os.path.join( outputInfo.absolutePath(), outputInfo.baseName()+'_'+str(destCrs.srsid())+'.'+outputExt )
+                        outputInfo = QFileInfo( outputFile )
+                        error = QgsVectorFileWriter.writeAsVectorFormat( outputLayer, outputFile, 'utf-8', destCrs, 'ESRI Shapefile', False, None )
+                    # compress files
+                    import zipfile
+                    try:
+                        import zlib
+                        compression = zipfile.ZIP_DEFLATED
+                    except:
+                        compression = zipfile.ZIP_STORED
+                    zFile = os.path.join( outputInfo.absolutePath(), outputInfo.baseName()+'.zip' )
+                    with zipfile.ZipFile(zFile, 'w') as zf:
+                        zf.write(os.path.join( outputInfo.absolutePath(), outputInfo.baseName()+'.shp' ), compress_type=compression, arcname=outputInfo.baseName()+'.shp')
+                        zf.write(os.path.join( outputInfo.absolutePath(), outputInfo.baseName()+'.shx' ), compress_type=compression, arcname=outputInfo.baseName()+'.shx')
+                        zf.write(os.path.join( outputInfo.absolutePath(), outputInfo.baseName()+'.dbf' ), compress_type=compression, arcname=outputInfo.baseName()+'.dbf')
+                        if os.path.exists( os.path.join( outputInfo.absolutePath(), outputInfo.baseName()+'.prj' ) ):
+                            zf.write(os.path.join( outputInfo.absolutePath(), outputInfo.baseName()+'.prj' ), compress_type=compression, arcname=outputInfo.baseName()+'.prj')
+                        zf.close()
+                    outputFile = zFile
+                elif v.format['mimetype'] == 'application/x-zipped-tab':
+                    error = QgsVectorFileWriter.writeAsVectorFormat( outputLayer, outputFile, 'utf-8', destCrs, 'Mapinfo File', False, None )
+                    # compress files
+                    import zipfile
+                    try:
+                        import zlib
+                        compression = zipfile.ZIP_DEFLATED
+                    except:
+                        compression = zipfile.ZIP_STORED
+                    zFile = os.path.join( outputInfo.absolutePath(), outputInfo.baseName()+'.zip' )
+                    with zipfile.ZipFile(zFile, 'w') as zf:
+                        zf.write(os.path.join( outputInfo.absolutePath(), outputInfo.baseName()+'.tab' ), compress_type=compression, arcname=outputInfo.baseName()+'.tab')
+                        zf.write(os.path.join( outputInfo.absolutePath(), outputInfo.baseName()+'.dat' ), compress_type=compression, arcname=outputInfo.baseName()+'.dat')
+                        zf.write(os.path.join( outputInfo.absolutePath(), outputInfo.baseName()+'.map' ), compress_type=compression, arcname=outputInfo.baseName()+'.map')
+                        if os.path.exists( os.path.join( outputInfo.absolutePath(), outputInfo.baseName()+'.id' ) ):
+                            zf.write(os.path.join( outputInfo.absolutePath(), outputInfo.baseName()+'.id' ), compress_type=compression, arcname=outputInfo.baseName()+'.id')
+                        zf.close()
+                    outputFile = zFile
+                elif v.format['mimetype'] == 'application/json':
                     error = QgsVectorFileWriter.writeAsVectorFormat( outputLayer, outputFile, 'utf-8', destCrs, 'GeoJSON', False, None )
                 elif v.format['mimetype'] in ('text/xml; subtype=gml/3.1.1','application/gml+xml; version=3.1.1') :
                     error = QgsVectorFileWriter.writeAsVectorFormat( outputLayer, outputFile, 'utf-8', destCrs, 'GML', False, None, ['XSISCHEMAURI=http://schemas.opengis.net/gml/3.1.1/base/feature.xsd','FORMAT=GML3'] )
@@ -561,7 +610,7 @@ class wpsFilter(QgsServerFilter):
                 elif 'CONFIG' in params :
                     qgisaddress = qgisaddress +'CONFIG='+ params['CONFIG'] +'&'
                 #pywpsConfig.setConfigValue("wps","serveraddress", qgisaddress)
-                #QgsMessageLog.logMessage("qgisaddress "+qgisaddress)
+                QgsMessageLog.logMessage("qgisaddress "+qgisaddress)
                 #pywpsConfig.setConfigValue("qgis","qgisserveraddress", qgisaddress)
                 
                 # init wps
@@ -585,6 +634,7 @@ class wpsFilter(QgsServerFilter):
                         request.clearHeaders()
                         request.clearBody()
                         #request.setHeader('Content-type', 'text/xml')
+                        QgsMessageLog.logMessage("contentType "+wps.request.contentType)
                         request.setInfoFormat(wps.request.contentType)
                         resp = wps.response
                         if wps.request.contentType == 'application/xml':
