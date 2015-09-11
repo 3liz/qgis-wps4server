@@ -314,7 +314,7 @@ def QGISProcessFactory(alg_name, project='', vectors=[], rasters=[], crss=[]):
                     elif crss:
                         coordCrs = QgsCoordinateReferenceSystem( str( crss[0] ) )
                     else:
-                        QgsCoordinateReferenceSystem( 'EPSG:4326' )
+                        coordCrs = QgsCoordinateReferenceSystem( 'EPSG:4326' )
                     if coordCrs:
                         coordExtent = QgsRectangle( coords[0][0], coords[0][1], coords[1][0], coords[1][1] )
                         xform = QgsCoordinateTransform( coordCrs, inputCrs )
@@ -349,7 +349,15 @@ def QGISProcessFactory(alg_name, project='', vectors=[], rasters=[], crss=[]):
                 # get the output QGIS vector layer
                 outputLayer = QgsVectorLayer( outputName, outputInfo.baseName(), 'ogr' )
                 # Update CRS
-                # outputLayer.setCrs( tAlg.crs )
+                if not outputLayer.dataProvider().crs().authid():
+                    outputLayer.setCrs( inputCrs )
+                # define destination CRS
+                destCrs = None
+                if outputLayer.crs().authid().startswith( 'USER:' ):
+                    if crss:
+                        destCrs = QgsCoordinateReferenceSystem( str( crss[0] ) )
+                    else:
+                        destCrs = QgsCoordinateReferenceSystem( 'EPSG:4326' )
                 # define the file extension
                 outputExt = 'gml'
                 if v.format['mimetype'] == 'application/json':
@@ -358,11 +366,11 @@ def QGISProcessFactory(alg_name, project='', vectors=[], rasters=[], crss=[]):
                 outputFile = os.path.join( outputInfo.absolutePath(), outputInfo.baseName()+'.'+outputExt )
                 # write the output GML file
                 if v.format['mimetype'] == 'application/json':
-                    error = QgsVectorFileWriter.writeAsVectorFormat( outputLayer, outputFile, 'utf-8', None, 'GeoJSON', False, None )
+                    error = QgsVectorFileWriter.writeAsVectorFormat( outputLayer, outputFile, 'utf-8', destCrs, 'GeoJSON', False, None )
                 elif v.format['mimetype'] in ('text/xml; subtype=gml/3.1.1','application/gml+xml; version=3.1.1') :
-                    error = QgsVectorFileWriter.writeAsVectorFormat( outputLayer, outputFile, 'utf-8', None, 'GML', False, None, ['XSISCHEMAURI=http://schemas.opengis.net/gml/3.1.1/base/feature.xsd','FORMAT=GML3'] )
+                    error = QgsVectorFileWriter.writeAsVectorFormat( outputLayer, outputFile, 'utf-8', destCrs, 'GML', False, None, ['XSISCHEMAURI=http://schemas.opengis.net/gml/3.1.1/base/feature.xsd','FORMAT=GML3'] )
                 else:
-                    error = QgsVectorFileWriter.writeAsVectorFormat( outputLayer, outputFile, 'utf-8', None, 'GML', False, None, ['XSISCHEMAURI=http://schemas.opengis.net/gml/2.1.2/feature.xsd'] )
+                    error = QgsVectorFileWriter.writeAsVectorFormat( outputLayer, outputFile, 'utf-8', destCrs, 'GML', False, None, ['XSISCHEMAURI=http://schemas.opengis.net/gml/2.1.2/feature.xsd'] )
                 args[v.identifier] = outputFile
                 # add output layer to map layer registry
                 #outputLayer = QgsVectorLayer( outputFile, v.identifier, 'ogr' )
