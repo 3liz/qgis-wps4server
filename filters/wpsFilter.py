@@ -308,11 +308,18 @@ def QGISProcessFactory(alg_name, project='', vectors=[], rasters=[], crss=[]):
                 parm = self.alg.getParameterFromName( v.identifier )
                 if parm.__class__.__name__ == 'ParameterExtent':
                     coords = v.getValue().coords
-                    coordCrs = QgsCoordinateReferenceSystem( str( v.getValue().crs ) )
-                    coordExtent = QgsRectangle( coords[0][0], coords[0][1], coords[1][0], coords[1][1] )
-                    xform = QgsCoordinateTransform( coordCrs, inputCrs )
-                    coordExtent = xform.transformBoundingBox( coordExtent )
-                    args[v.identifier] = str(coordExtent.xMinimum())+','+str(coordExtent.xMaximum())+','+str(coordExtent.yMinimum())+','+str(coordExtent.yMaximum())
+                    coordCrs = None
+                    if v.getValue().crs:
+                        coordCrs = QgsCoordinateReferenceSystem( str( v.getValue().crs ) )
+                    elif crss:
+                        coordCrs = QgsCoordinateReferenceSystem( str( crss[0] ) )
+                    else:
+                        QgsCoordinateReferenceSystem( 'EPSG:4326' )
+                    if coordcrs:
+                        coordExtent = QgsRectangle( coords[0][0], coords[0][1], coords[1][0], coords[1][1] )
+                        xform = QgsCoordinateTransform( coordCrs, inputCrs )
+                        coordExtent = xform.transformBoundingBox( coordExtent )
+                        args[v.identifier] = str(coordExtent.xMinimum())+','+str(coordExtent.xMaximum())+','+str(coordExtent.yMinimum())+','+str(coordExtent.yMaximum())
         
         # Adds None for output parameter(s)
         for k in self._outputs:
