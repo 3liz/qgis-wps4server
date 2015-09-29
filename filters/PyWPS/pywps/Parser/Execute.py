@@ -405,10 +405,9 @@ class Post(PostParser):
 
         attributes = {}
         attributes["value"] = []
-        attributes["crs"] = bboxDataNode.getAttributeNS(self.owsNameSpace,
-                                                                    "crs")
-        attributes["dimensions"] = int(bboxDataNode.getAttributeNS(
-                                        self.owsNameSpace, "dimensions"))
+        
+        attributes["crs"] = bboxDataNode.getAttribute("crs")
+        attributes["dimensions"] = int(bboxDataNode.getAttribute("dimensions"))
 
         for coord in bboxDataNode.getElementsByTagNameNS(
                 self.owsNameSpace,"LowerCorner")[0].firstChild.nodeValue.split():
