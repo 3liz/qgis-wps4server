@@ -535,6 +535,7 @@ class wpsFilter(QgsServerFilter):
                 if projectPath and os.path.exists( projectPath ) :
                     projectFolder = os.path.dirname( projectPath )
                 QgsMessageLog.logMessage("projectPath "+str(projectPath))
+                
                 rasterLayers = []
                 vectorLayers = []
                 
@@ -567,6 +568,7 @@ class wpsFilter(QgsServerFilter):
                         elif l['type'] == "vector" :
                             l['geometry'] = ml.attributes["geometry"].value
                             vectorLayers.append( l )
+                    
                     deafultCrs = ''
                     for mapcanvas in p_dom.getElementsByTagName('mapcanvas'):
                         for destinationsrs in mapcanvas.getElementsByTagName('destinationsrs'):

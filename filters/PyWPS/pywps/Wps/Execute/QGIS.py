@@ -43,6 +43,14 @@ class QGIS:
         self.project.writeEntry("WMSContactPhone", "/", config.getConfigValue("provider","phoneVoice"))
         self.project.writeEntry("WMSContactPhone", "/", config.getConfigValue("provider","electronicMailAddress"))
         
+        if config.config.has_section( 'qgis' ) and config.config.has_option( 'qgis', 'output_ows_crss' ) :
+            outputOWSCRSs = config.getConfigValue( 'qgis', 'output_ows_crss' )
+            outputOWSCRSs = outputOWSCRSs.split(',')
+            outputOWSCRSs = [ proj.strip() for proj in outputOWSCRSs ]
+            self.project.writeEntry("WMSCrsList", "/", outputOWSCRSs)
+        else :
+            self.project.writeEntry("WMSCrsList", "/", ['EPSG:4326','EPSG:3857'])
+        
         self.project.write( QFileInfo( self.projectFileName ) )
         
     def getReference(self,output):
