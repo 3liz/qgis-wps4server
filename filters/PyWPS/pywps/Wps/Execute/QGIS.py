@@ -35,6 +35,7 @@ class QGIS:
         view = QgsLayerTreeView()
         view.setModel(model)
         self.canvas = QgsMapCanvas()
+        self.canvas.setCrsTransformEnabled( True )
         self.bridge = QgsLayerTreeMapCanvasBridge( treeRoot, self.canvas)
         
         self.projectFileName = os.path.join(config.getConfigValue("server","outputPath"),self.sessionId+".qgs")
@@ -89,7 +90,6 @@ class QGIS:
             outputLayer = layersByName[0]
         
         treeRoot = self.project.layerTreeRoot()
-        self.canvas.setCrsTransformEnabled( True )
         if config.config.has_section( 'qgis' ) and config.config.has_option( 'qgis', 'output_ows_crss' ) :
             outputOWSCRSs = config.getConfigValue( 'qgis', 'output_ows_crss' )
             outputOWSCRSs = outputOWSCRSs.split(',')
@@ -101,6 +101,7 @@ class QGIS:
         if not treeRoot.findLayer( outputLayer.id() ) :
             treeRoot.addLayer( outputLayer )
         
+        self.bridge.setCanvasLayers()
         self.canvas.zoomToFullExtent()
         
         self.project.write( QFileInfo( self.projectFileName ) )
