@@ -72,7 +72,7 @@ class QGIS:
         
     def getReference(self,output):
         
-        if output.format["mimetype"] == 'text/csv' :
+        if output.format["mimetype"] in [ 'text/csv', 'application/x-zipped-shp', 'application/x-zipped-tab' ] :
             return None
         
         mlr = QgsMapLayerRegistry.instance()
