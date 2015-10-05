@@ -517,6 +517,12 @@ class wpsFilter(QgsServerFilter):
                         ProcessingConfig.setSettingValue( 'R_FOLDER', os.path.join( processingPath, 'rscripts' ) )
                         # Reload algorithms
                         Processing.loadAlgorithms()
+                
+                crsList = []
+                if pywpsConfig.config.has_section( 'qgis' ) and pywpsConfig.config.has_option( 'qgis', 'input_bbox_crss' ) :
+                    inputBBoxCRSs = pywpsConfig.getConfigValue( 'qgis', 'input_bbox_crss' )
+                    inputBBoxCRSs = inputBBoxCRSs.split(',')
+                    crsList = [ proj.strip() for proj in inputBBoxCRSs ]
 
                 # get QGIS project path
                 projectPath = os.getenv("QGIS_PROJECT_FILE")
@@ -531,7 +537,7 @@ class wpsFilter(QgsServerFilter):
                 QgsMessageLog.logMessage("projectPath "+str(projectPath))
                 rasterLayers = []
                 vectorLayers = []
-                crsList = []
+                
                 if projectPath and os.path.exists( projectPath ) :
                     p_dom = minidom.parse( projectPath )
                     for ml in p_dom.getElementsByTagName('maplayer') :
