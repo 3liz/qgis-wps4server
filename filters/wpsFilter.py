@@ -522,7 +522,7 @@ class wpsFilter(QgsServerFilter):
                 if pywpsConfig.config.has_section( 'qgis' ) and pywpsConfig.config.has_option( 'qgis', 'input_bbox_crss' ) :
                     inputBBoxCRSs = pywpsConfig.getConfigValue( 'qgis', 'input_bbox_crss' )
                     inputBBoxCRSs = inputBBoxCRSs.split(',')
-                    crsList = [ proj.strip() for proj in inputBBoxCRSs ]
+                    crsList = [ proj.strip().upper() for proj in inputBBoxCRSs ]
 
                 # get QGIS project path
                 projectPath = os.getenv("QGIS_PROJECT_FILE")
