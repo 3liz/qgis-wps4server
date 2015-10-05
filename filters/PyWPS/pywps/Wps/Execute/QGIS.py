@@ -1,9 +1,11 @@
 
 # first qgis
 from qgis.core import *
+from qgis.gui import *
 # next Qt
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
+from PyQt4.QtXml import *
 
 from pywps import config
 import os
@@ -27,6 +29,13 @@ class QGIS:
         self.sessionId = sessId
         
         self.project = QgsProject.instance()
+        
+        treeRoot = self.project.layerTreeRoot()
+        model = QgsLayerTreeModel(treeRoot)
+        view = QgsLayerTreeView()
+        view.setModel(model)
+        self.canvas = QgsMapCanvas()
+        self.bridge = QgsLayerTreeMapCanvasBridge( treeRoot, self.canvas)
         
         self.projectFileName = os.path.join(config.getConfigValue("server","outputPath"),self.sessionId+".qgs")
         self.project.writePath( self.projectFileName )
@@ -52,6 +61,13 @@ class QGIS:
             self.project.writeEntry("WMSCrsList", "/", ['EPSG:4326','EPSG:3857'])
         
         self.project.write( QFileInfo( self.projectFileName ) )
+        self.project.writeProject.connect( self.bridge.writeProject )
+        self.project.writeProject.connect( self.__writeProject__ )
+        
+    def __writeProject__( self, doc ) :
+        treeRoot = self.project.layerTreeRoot()
+        oldLegendElem = QgsLayerTreeUtils.writeOldLegend( doc, treeRoot, False, [] )
+        doc.firstChildElement( "qgis" ).appendChild( oldLegendElem )
         
     def getReference(self,output):
         
@@ -71,10 +87,22 @@ class QGIS:
                 mlr.addMapLayer( outputLayer )
         else :
             outputLayer = layersByName[0]
+        
         treeRoot = self.project.layerTreeRoot()
+        self.canvas.setCrsTransformEnabled( True )
+        if config.config.has_section( 'qgis' ) and config.config.has_option( 'qgis', 'output_ows_crss' ) :
+            outputOWSCRSs = config.getConfigValue( 'qgis', 'output_ows_crss' )
+            outputOWSCRSs = outputOWSCRSs.split(',')
+            outputOWSCRSs = [ proj.strip().upper() for proj in outputOWSCRSs ]
+            self.canvas.setDestinationCrs( QgsCoordinateReferenceSystem( outputOWSCRSs[0] ) )
+        else:
+            self.canvas.setDestinationCrs( QgsCoordinateReferenceSystem( 'EPSG:4326' ) )
+        
         if not treeRoot.findLayer( outputLayer.id() ) :
             treeRoot.addLayer( outputLayer )
-            
+        
+        self.canvas.zoomToFullExtent()
+        
         self.project.write( QFileInfo( self.projectFileName ) )
         
         if outputLayer.type() == QgsMapLayer.VectorLayer :
