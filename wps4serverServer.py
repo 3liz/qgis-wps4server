@@ -17,28 +17,31 @@
  *   (at your option) any later version.                                   *
  *                                                                         *
  ***************************************************************************/
- This script initializes the plugin, making it known to QGIS and QGIS Server.
 """
 
+__author__ = 'DHONT René-Luc'
+__date__ = 'August 2015'
+__copyright__ = '(C) 2015, DHONT René-Luc - 3Liz'
 
-# noinspection PyPep8Naming
-def classFactory(iface):  # pylint: disable=invalid-name
-    """Load wps4server class from file wps4server.
+from PyQt4.QtCore import *
+from PyQt4.QtGui import *
+from qgis.core import *
+from qgis.server import *
 
-    :param iface: A QGIS interface instance.
-    :type iface: QgsInterface
-    """
-    #
-    from .wps4server import wps4server
-    return wps4server(iface)
-    
-    
-def serverClassFactory(serverIface):  # pylint: disable=invalid-name
-    """Load wps4serverServer class from file wps4server.
+import os.path
 
-    :param iface: A QGIS Server interface instance.
-    :type iface: QgsServerInterface
-    """
-    #
-    from .wps4serverServer import wps4serverServer
-    return wps4serverServer(serverIface)
+class wps4serverServer:
+    """Plugin for QGIS server
+    this plugin loads wps filter based on PyWPS"""
+
+    def __init__(self, serverIface):
+        # Save reference to the QGIS server interface
+        self.serverIface = serverIface
+        QgsMessageLog.logMessage("SUCCESS - wps4server init", 'plugin', QgsMessageLog.INFO)
+        
+        from filters.wpsFilter import wpsFilter
+        try:
+            serverIface.registerFilter( wpsFilter(serverIface), 100 )
+        except Exception, e:
+            QgsLogger.debug("wps4server - Error loading filter wps : %s" % e )
+
