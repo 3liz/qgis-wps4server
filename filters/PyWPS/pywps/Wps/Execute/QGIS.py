@@ -37,8 +37,14 @@ class QGIS:
         self.canvas.setCrsTransformEnabled( True )
         self.bridge = QgsLayerTreeMapCanvasBridge( treeRoot, self.canvas)
         
+        self.project.writeProject.connect( self.bridge.writeProject )
+        self.project.writeProject.connect( self.__writeProject__ )
+        
         self.projectFileName = os.path.join(config.getConfigValue("server","outputPath"),self.sessionId+".qgs")
-        self.project.writePath( self.projectFileName )
+        if os.path.exists( self.projectFileName ):
+            self.project.read( QFileInfo(self.projectFileName ) )
+        else:
+            self.project.writePath( self.projectFileName )
         
         self.project.setTitle( "%s-%s"%(self.process.identifier,self.sessionId) )
         self.project.writeEntry("WMSServiceCapabilities", "/", True)
@@ -61,8 +67,6 @@ class QGIS:
             self.project.writeEntry("WMSCrsList", "/", ['EPSG:4326','EPSG:3857'])
         
         self.project.write( QFileInfo( self.projectFileName ) )
-        self.project.writeProject.connect( self.bridge.writeProject )
-        self.project.writeProject.connect( self.__writeProject__ )
         
     def __writeProject__( self, doc ) :
         treeRoot = self.project.layerTreeRoot()
@@ -71,7 +75,7 @@ class QGIS:
         
     def getReference(self,output):
         
-        if output.format["mimetype"] in [ 'text/csv', 'application/x-zipped-shp', 'application/x-zipped-tab' ] :
+        if output.format["mimetype"] in ('text/csv', 'application/x-zipped-shp', 'application/x-zipped-tab'):
             return None
         
         mlr = QgsMapLayerRegistry.instance()
@@ -111,6 +115,8 @@ class QGIS:
                 WFSLayers.append( outputLayer.id() )
                 self.project.writeEntry( "WFSLayers", "/", WFSLayers )
                 self.project.write( QFileInfo( self.projectFileName ) )
+            if output.format['mimetype'] in ('application/x-ogc-wms', 'application/x-ogc-wfs'):
+                return self.getCapabilities(output)
             return self.getMapServerWFS(output)
                 
         elif outputLayer.type() == QgsMapLayer.RasterLayer :
@@ -124,14 +130,27 @@ class QGIS:
                 WCSLayers.append( outputLayer.id() )
                 self.project.writeEntry( "WCSLayers", "/", WCSLayers )
                 self.project.write( QFileInfo( self.projectFileName ) )
+            if output.format['mimetype'] in ('application/x-ogc-wms', 'application/x-ogc-wcs'):
+                return self.getCapabilities(output)
             return self.getMapServerWCS(output)
         
+    def getCapabilities(self,output):
+        """Get the URL for qgis-server GetCapapbilities request of the output"""
+        if output.format["mimetype"] == 'application/x-ogc-wms':
+            return config.getConfigValue("qgis","qgisserveraddress")+"?map="+self.projectFileName+"&SERVICE=WMS"+ "&REQUEST=GetCapabilities"
+        elif output.format["mimetype"] == 'application/x-ogc-wfs':
+            return config.getConfigValue("qgis","qgisserveraddress")+"?map="+self.projectFileName+"&SERVICE=WFS"+ "&REQUEST=GetCapabilities"
+        elif output.format["mimetype"] == 'application/x-ogc-wcs':
+            return config.getConfigValue("qgis","qgisserveraddress")+"?map="+self.projectFileName+"&SERVICE=WCS"+ "&REQUEST=GetCapabilities"
+        else:
+            return config.getConfigValue("qgis","qgisserveraddress")+"?map="+self.projectFileName+"&SERVICE=WMS"+ "&REQUEST=GetCapabilities"
+        
     def getMapServerWCS(self,output):
-        """Get the URL for mapserver WCS request of the output"""
+        """Get the URL for qgis-server WCS request of the output"""
         return config.getConfigValue("qgis","qgisserveraddress")+ "?map="+self.projectFileName+ "&SERVICE=WCS"+ "&REQUEST=GetCoverage"+ "&VERSION=1.0.0"+ "&COVERAGE="+output.identifier+"&CRS="+output.projection.replace("+init=","")+ ("&BBOX=%s,%s,%s,%s"%(output.bbox[0],output.bbox[1],output.bbox[2],output.bbox[3]))+ "&HEIGHT=%s" %(output.height)+("&WIDTH=%s"%(output.width))+("&FORMAT=%s"%output.format["mimetype"])
 
     def getMapServerWFS(self,output):
-        """Get the URL for mapserver WFS request of the output"""
+        """Get the URL for qgis-server WFS request of the output"""
         url = config.getConfigValue("qgis","qgisserveraddress")+"?map="+self.projectFileName+"&SERVICE=WFS"+ "&REQUEST=GetFeature"+ "&VERSION=1.0.0"+"&TYPENAME="+output.identifier
         if output.format["mimetype"] == 'application/json' :
             url+= "&OUTPUTFORMAT=GeoJSON"

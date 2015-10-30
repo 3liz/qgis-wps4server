@@ -185,13 +185,27 @@ def QGISProcessFactory(alg_name, project='', vectors=[], rasters=[], crss=[]):
                     },{
                         'mimeType':'application/x-zipped-tab',
                         'encoding': 'utf-8'
+                    },{
+                        'mimeType':'application/x-ogc-wms',
+                        'encoding': 'utf-8'
+                    },{
+                        'mimeType':'application/x-ogc-wfs',
+                        'encoding': 'utf-8'
                     }]
                 )
                 if pywpsConfig.getConfigValue("qgis","qgisserveraddress") :
                     self._outputs['Output%s' % i].useQgisServer = True
             elif parm.__class__.__name__ == 'OutputRaster':
                 self._outputs['Output%s' % i] = self.addComplexOutput(parm.name, parm.description,
-                    formats = [{'mimeType':'image/tiff'}])
+                    formats = [{
+                        'mimeType':'image/tiff'
+                    },{
+                        'mimeType':'application/x-ogc-wms',
+                        'encoding': 'utf-8'
+                    },{
+                        'mimeType':'application/x-ogc-wcs',
+                        'encoding': 'utf-8'
+                    }])
                 if pywpsConfig.getConfigValue("qgis","qgisserveraddress") :
                     self._outputs['Output%s' % i].useQgisServer = True
             elif parm.__class__.__name__ == 'OutputTable':
@@ -346,6 +360,8 @@ def QGISProcessFactory(alg_name, project='', vectors=[], rasters=[], crss=[]):
         for k in self._outputs:
             v = getattr(self, k)
             parm = self.alg.getOutputFromName( v.identifier )
+            
+            # Output Vector
             if parm.__class__.__name__ == 'OutputVector':
                 outputName = result.get(v.identifier, None)
                 if not outputName :
@@ -421,14 +437,29 @@ def QGISProcessFactory(alg_name, project='', vectors=[], rasters=[], crss=[]):
                 else:
                     error = QgsVectorFileWriter.writeAsVectorFormat( outputLayer, outputFile, 'utf-8', destCrs, 'GML', False, None, ['XSISCHEMAURI=http://schemas.opengis.net/gml/2.1.2/feature.xsd'] )
                 args[v.identifier] = outputFile
-                # add output layer to map layer registry
-                #outputLayer = QgsVectorLayer( outputFile, v.identifier, 'ogr' )
-                #mlr.addMapLayer( outputLayer )
+                
+                # get OWS getCapabilities URL
+                if not v.asReference and v.format['mimetype'] in ('application/x-ogc-wms', 'application/x-ogc-wfs'):
+                    from pywps.Wps.Execute import QGIS
+                    qgis = QGIS.QGIS(self, self.pywps.UUID)
+                    v.setValue( outputFile )
+                    outputFile = qgis.getReference(v)
+                    args[v.identifier] = outputFile
+            
+            # Output Raster       
             elif parm.__class__.__name__ == 'OutputRaster':
                 outputName = result.get(v.identifier, None)
                 if not outputName :
                   return 'No output file'
                 args[v.identifier] = outputName
+                
+                # get OWS getCapabilities URL
+                if not v.asReference and v.format['mimetype'] in ('application/x-ogc-wms', 'application/x-ogc-wcs'):
+                    from pywps.Wps.Execute import QGIS
+                    qgis = QGIS.QGIS(self, self.pywps.UUID)
+                    v.setValue( outputName )
+                    outputFile = qgis.getReference(v)
+                    args[v.identifier] = outputFile
             else:
                 args[v.identifier] = result.get(v.identifier, None)
         for k in self._outputs:

@@ -999,24 +999,49 @@ class Execute(Request):
         complexOutput["mimetype"] = output.format["mimetype"]
         complexOutput["encoding"] = output.format["encoding"]
         complexOutput["schema"] = output.format["schema"]
+        
+        textMimeTypes = (
+            'text/xml',
+            'application/gml+xml',
+            'application/json',
+            'application/vnd.geo+json',
+            'application/x-ogc-wms',
+            'application/x-ogc-wfs',
+            'application/x-ogc-wcs',
+        )
+        xmlMimeTypes = (
+            'text/xml',
+            'application/gml+xml',
+            'application/x-ogc-wms',
+            'application/x-ogc-wfs',
+            'application/x-ogc-wcs',
+        )
        
         if output.format["mimetype"] is not None:
         # CDATA section in output
             #attention to application/xml
-            if output.format["mimetype"].find("text") < 0 and output.format["mimetype"].find("xml")<0:
+            baseMimeType = output.format["mimetype"].split(';')[0]
+            #if output.format["mimetype"].find("text") < 0 and output.format["mimetype"].find("xml")<0:
             #complexOutput["cdata"] = 1
+            if not baseMimeType in textMimeTypes:
                 os.rename(output.value, output.value+".binary")
                 base64.encode(open(output.value+".binary"),open(output.value,"w"))
             
         
         # set output value
-        complexOutput["complexdata"] = open(output.value,"r").read()
+        if output.value.startswith('http'):
+            import urllib2
+            complexOutput["complexdata"] = urllib2.urlopen( output.value ).read()
+        else:
+            complexOutput["complexdata"] = open(output.value,"r").read()
 
         # remove <?xml version= ... part from beginning of some xml
         # documents
         #Better <?xml search due to problems with \n
         if output.format["mimetype"] is not None:
-            if output.format["mimetype"].find("xml") > -1:
+            #if output.format["mimetype"].find("xml") > -1:
+            baseMimeType = output.format["mimetype"].split(';')[0]
+            if baseMimeType in xmlMimeTypes:
                 beginXMLidx=complexOutput["complexdata"].find("?>")
                 #All <?xml..?> will be beginXMLidx + 2 
                 
