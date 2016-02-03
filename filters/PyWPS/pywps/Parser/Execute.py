@@ -1,8 +1,8 @@
 """
 This module parses OGC Web Processing Service (WPS) Execute request.
 """
-# Author:	Jachym Cepicky
-#        	http://les-ejk.cz
+# Author:   Jachym Cepicky
+#           http://les-ejk.cz
 #               jachym at les-ejk dot cz
 # Lince:
 #
@@ -59,7 +59,7 @@ class Post(PostParser):
         identifiers = []
         identifierNode = None
         dataInputs = []
-       
+
 
         #
         # Mandatory options
@@ -271,11 +271,11 @@ class Post(PostParser):
         #
 
         # mimeType, encoding, schema - are now supportd supported ^_^ #jmdj
-        
+
         attributes["mimetype"]=dataTypeNode.getAttribute("mimeType")
         attributes["encoding"]=dataTypeNode.getAttribute("encoding")
         attributes["schema"]=dataTypeNode.getAttribute("schema")
-        
+
        #jmdj GET method doesn't have a namespace
         attributes["method"] = dataTypeNode.getAttribute("method")
         if attributes["method"] == "":
@@ -405,9 +405,21 @@ class Post(PostParser):
 
         attributes = {}
         attributes["value"] = []
-        
-        attributes["crs"] = bboxDataNode.getAttribute("crs")
-        attributes["dimensions"] = int(bboxDataNode.getAttribute("dimensions"))
+
+        attributes["crs"] = ''
+        if bboxDataNode.hasAttribute("crs"):
+            attributes["crs"] = bboxDataNode.getAttribute("crs")
+        elif bboxDataNode.hasAttributeNS(self.nameSpace, "crs"):
+            attributes["crs"] = bboxDataNode.getAttributeNS(self.nameSpace, "crs")
+        elif bboxDataNode.hasAttributeNS(self.owsNameSpace, "crs"):
+            attributes["crs"] = bboxDataNode.getAttributeNS(self.owsNameSpace, "crs")
+        attributes["dimensions"] = 2
+        if bboxDataNode.hasAttribute("dimensions"):
+            attributes["dimensions"] = int(bboxDataNode.getAttribute("dimensions"))
+        elif bboxDataNode.hasAttributeNS(self.nameSpace, "dimensions"):
+            attributes["dimensions"] = int(bboxDataNode.getAttributeNS(self.nameSpace, "dimensions"))
+        elif bboxDataNode.hasAttributeNS(self.owsNameSpace, "dimensions"):
+            attributes["dimensions"] = int(bboxDataNode.getAttributeNS(self.owsNameSpace, "dimensions"))
 
         for coord in bboxDataNode.getElementsByTagNameNS(
                 self.owsNameSpace,"LowerCorner")[0].firstChild.nodeValue.split():
@@ -465,7 +477,7 @@ class Get(GetParser):
         try:
             self.inputs["datainputs"] = self.parseDataInputs(
                         self.unparsedInputs["datainputs"])
-        
+
         except KeyError:
             self.inputs["datainputs"] = None
         # ResponseForm
@@ -475,7 +487,7 @@ class Get(GetParser):
         # ResponseDocument
         try:
             self.inputs["responseform"]["responsedocument"] = \
-                    {"outputs":  self.parseDataInputs(self.unparsedInputs["responsedocument"])}  
+                    {"outputs":  self.parseDataInputs(self.unparsedInputs["responsedocument"])}
         except KeyError:
             self.inputs["responseform"]["responsedocument"] = {}
 
@@ -537,7 +549,7 @@ class Get(GetParser):
     def _parseBBoxInput(self,dataInput):
         """Parser of Bounding Box data input"""
         print dataInput
-            
+
 
     def parseDataInputs(self,dataInputs):
         """Parse DataInputs parameter
@@ -559,7 +571,7 @@ class Get(GetParser):
 
             if not key and not valueAndAttrs:
                 continue
-          
+
             # initial value
             parsed={"identifier":key, "value":None}
             # additional input attributes are separated by "@"
@@ -568,7 +580,7 @@ class Get(GetParser):
                 encodedValue=valueAndAttrs.split("@")[0]
                 parsed["value"]=urllib.unquote(encodedValue)
                 attributes=valueAndAttrs.split("@")[1:]
-                    
+
             elif valueAndAttrs.find("@") == 0:
                 #example: @xlink:href=http://rsg.pml.ac.uk/wps/testdata/elev_srtm_30m.img
                 if ("@xlink:href" in valueAndAttrs):
@@ -586,15 +598,15 @@ class Get(GetParser):
                 encodedValue=valueAndAttrs
                 parsed["value"]=self._trueOrFalse(urllib.unquote(valueAndAttrs))
                 attributes = []
-           
-            
+
+
             # additional attribute key is separated by "=" from it's value
             for attribute in attributes:
                 attributeKey, attributeValue = attribute.split("=")
                 parsed[attributeKey.lower()]=self._trueOrFalse(urllib.unquote(attributeValue))
             parsedDataInputs.append(parsed)
         return parsedDataInputs
-    
+
     #Moved to Parser class
     #def _trueOrFalse(self,str):
     #    """Return True or False, if input is "true" or "false" """
