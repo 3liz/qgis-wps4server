@@ -43,7 +43,7 @@ def QGISProcessFactory(alg_name, project='', vectors=[], rasters=[], crss=[]):
     from pywps.Process import WPSProcess
     from new import classobj
     import types
-    
+
     # Sanitize name
     class_name = alg_name.replace(':', '_')
     alg = Processing.getAlgorithm(alg_name)
@@ -51,7 +51,7 @@ def QGISProcessFactory(alg_name, project='', vectors=[], rasters=[], crss=[]):
     # layer inputs
     rasterLayers = rasters
     vectorLayers = vectors
-    
+
     def process_init(self):
         # Automatically init the process attributes
         WPSProcess.__init__(self,
@@ -63,18 +63,18 @@ def QGISProcessFactory(alg_name, project='', vectors=[], rasters=[], crss=[]):
             abstract= '<![CDATA[' + str(alg) + ']]>',
             grassLocation=False)
         self.alg = alg
-        
+
         # Test parameters
         if not len( self.alg.parameters ):
             self.alg.defineCharacteristics()
-        
+
         # Add I/O
         i = 1
         for parm in alg.parameters:
             minOccurs = 1
             if getattr(parm, 'optional', False):
                 minOccurs = 0
-                
+
             # TODO: create "LiteralValue", "ComplexValue" or "BoundingBoxValue"
             # this can be done checking the class:
             # parm.__class__, one of
@@ -98,7 +98,7 @@ def QGISProcessFactory(alg_name, project='', vectors=[], rasters=[], crss=[]):
                 else :
                     self._inputs['Input%s' % i] = self.addComplexInput(escape(parm.name), '<![CDATA[' + parm.description + ']]>',
                         minOccurs=minOccurs, formats = [{'mimeType':'text/xml'}])
-                        
+
             elif parm.__class__.__name__ == 'ParameterRaster':
                 if rasterLayers :
                     self._inputs['Input%s' % i] = self.addLiteralInput(escape(parm.name), '<![CDATA[' + parm.description + ']]>',
@@ -108,25 +108,25 @@ def QGISProcessFactory(alg_name, project='', vectors=[], rasters=[], crss=[]):
                 else :
                     self._inputs['Input%s' % i] = self.addComplexInput(escape(parm.name), '<![CDATA[' + parm.description + ']]>',
                         minOccurs=minOccurs, formats = [{'mimeType':'image/tiff'}])
-                        
+
             elif parm.__class__.__name__ == 'ParameterTable':
                 self._inputs['Input%s' % i] = self.addComplexInput(escape(parm.name), '<![CDATA[' + parm.description + ']]>',
                     minOccurs=minOccurs, formats = [{'mimeType':'text/csv'}])
-                    
+
             elif parm.__class__.__name__ == 'ParameterExtent':
                 self._inputs['Input%s' % i] = self.addBBoxInput(escape(parm.name), '<![CDATA[' + parm.description + ']]>',
                     minOccurs=minOccurs)
                 # Add supported CRSs from project or config
                 if crss:
                     self._inputs['Input%s' % i].crss = crss
-                    
+
             elif parm.__class__.__name__ == 'ParameterSelection':
                 self._inputs['Input%s' % i] = self.addLiteralInput(escape(parm.name), '<![CDATA[' + parm.description + ']]>',
                                                 minOccurs=minOccurs,
                                                 type=types.StringType,
                                                 default=getattr(parm, 'default', None))
                 self._inputs['Input%s' % i].values = parm.options
-                
+
             elif parm.__class__.__name__ == 'ParameterRange':
                 tokens = parm.default.split(',')
                 n1 = float(tokens[0])
@@ -136,7 +136,7 @@ def QGISProcessFactory(alg_name, project='', vectors=[], rasters=[], crss=[]):
                                                 type=types.FloatType,
                                                 default=n1)
                 self._inputs['Input%s' % i].values = ((n1,n2))
-                
+
             else:
                 type = types.StringType
                 if parm.__class__.__name__ == 'ParameterBoolean':
@@ -292,7 +292,7 @@ def QGISProcessFactory(alg_name, project='', vectors=[], rasters=[], crss=[]):
             # raster layers
             elif parm.__class__.__name__ == 'ParameterRaster':
                 if rasterLayers :
-                    layerName = v.getValue() 
+                    layerName = v.getValue()
                     values = [l for l in rasterLayers if l['name'] == layerName]
                     l = values[0]
                     layer = QgsRasterLayer( l['datasource'], l['name'], l['provider'] )
@@ -320,7 +320,7 @@ def QGISProcessFactory(alg_name, project='', vectors=[], rasters=[], crss=[]):
                 args[v.identifier] = str(coords[0][0])+','+str(coords[1][0])+','+str(coords[0][1])+','+str(coords[1][1])
             else:
                 args[v.identifier] = v.getValue()
-        
+
         # if extent in inputs, transform it to the alg CRS
         if inputCrs:
             for k in self._inputs:
@@ -340,12 +340,12 @@ def QGISProcessFactory(alg_name, project='', vectors=[], rasters=[], crss=[]):
                         xform = QgsCoordinateTransform( coordCrs, inputCrs )
                         coordExtent = xform.transformBoundingBox( coordExtent )
                         args[v.identifier] = str(coordExtent.xMinimum())+','+str(coordExtent.xMaximum())+','+str(coordExtent.yMinimum())+','+str(coordExtent.yMaximum())
-        
+
         # Adds None for output parameter(s)
         for k in self._outputs:
             v = getattr(self, k)
             args[v.identifier] = None
-        
+
         if not len( self.alg.parameters ):
             self.alg.defineCharacteristics()
 
@@ -360,7 +360,7 @@ def QGISProcessFactory(alg_name, project='', vectors=[], rasters=[], crss=[]):
         for k in self._outputs:
             v = getattr(self, k)
             parm = self.alg.getOutputFromName( v.identifier )
-            
+
             # Output Vector
             if parm.__class__.__name__ == 'OutputVector':
                 outputName = result.get(v.identifier, None)
@@ -373,6 +373,7 @@ def QGISProcessFactory(alg_name, project='', vectors=[], rasters=[], crss=[]):
                 # Update CRS
                 if not outputLayer.dataProvider().crs().authid():
                     outputLayer.setCrs( inputCrs )
+                    v.projection = inputCrs
                 # define destination CRS
                 destCrs = None
                 if outputLayer.crs().authid().startswith( 'USER:' ):
@@ -437,7 +438,7 @@ def QGISProcessFactory(alg_name, project='', vectors=[], rasters=[], crss=[]):
                 else:
                     error = QgsVectorFileWriter.writeAsVectorFormat( outputLayer, outputFile, 'utf-8', destCrs, 'GML', False, None, ['XSISCHEMAURI=http://schemas.opengis.net/gml/2.1.2/feature.xsd'] )
                 args[v.identifier] = outputFile
-                
+
                 # get OWS getCapabilities URL
                 if not v.asReference and v.format['mimetype'] in ('application/x-ogc-wms', 'application/x-ogc-wfs'):
                     from pywps.Wps.Execute import QGIS
@@ -445,14 +446,22 @@ def QGISProcessFactory(alg_name, project='', vectors=[], rasters=[], crss=[]):
                     v.setValue( outputFile )
                     outputFile = qgis.getReference(v)
                     args[v.identifier] = outputFile
-            
-            # Output Raster       
+
+            # Output Raster
             elif parm.__class__.__name__ == 'OutputRaster':
                 outputName = result.get(v.identifier, None)
+                # get output file info
+                outputInfo = QFileInfo( outputName )
+                # get the output QGIS vector layer
+                outputLayer = QgsRasterLayer( outputName, outputInfo.baseName(), 'gdal' )
+                # Update CRS
+                if not outputLayer.dataProvider().crs().authid():
+                    outputLayer.setCrs( inputCrs )
+                    v.projection = inputCrs
                 if not outputName :
                   return 'No output file'
                 args[v.identifier] = outputName
-                
+
                 # get OWS getCapabilities URL
                 if not v.asReference and v.format['mimetype'] in ('application/x-ogc-wms', 'application/x-ogc-wcs'):
                     from pywps.Wps.Execute import QGIS
@@ -489,11 +498,13 @@ class wpsFilter(QgsServerFilter):
         super(wpsFilter, self).__init__(serverIface)
 
     def requestReady(self):
-        QgsMessageLog.logMessage("wpsFilter.requestReady")
-        
+        """request ready"""
+        #QgsMessageLog.logMessage("wpsFilter.requestReady")
+
 
     def sendResponse(self):
-        QgsMessageLog.logMessage("wpsFilter.sendResponse")
+        """send response"""
+        #QgsMessageLog.logMessage("wpsFilter.sendResponse")
 
     def responseComplete(self):
         QgsMessageLog.logMessage("wpsFilter.responseComplete")
@@ -504,7 +515,7 @@ class wpsFilter(QgsServerFilter):
             # prepare query
             inputQuery = '&'.join(["%s=%s" % (k, params[k]) for k in params if k.lower() != 'map' and k.lower() != 'config' and k.lower != 'request_body'])
             request_body = params.get('REQUEST_BODY', '')
-            
+
             # get config
             configPath = os.getenv("PYWPS_CFG")
             if not configPath and 'config' in params :
@@ -512,11 +523,11 @@ class wpsFilter(QgsServerFilter):
             elif not configPath and 'CONFIG' in params :
                 configPath = params['CONFIG']
             QgsMessageLog.logMessage("configPath "+str(configPath))
-            
+
             if configPath :
                 os.environ["PYWPS_CFG"] = configPath
             pywpsConfig.loadConfiguration()
-                
+
             try:
                 providerList = ''
                 algList = ''
@@ -535,8 +546,8 @@ class wpsFilter(QgsServerFilter):
                     # get the algorithm filter
                     if pywpsConfig.config.has_option( 'qgis', 'algs_filter' ) :
                         algsFilter = pywpsConfig.getConfigValue( 'qgis', 'algs_filter' )
-                    
-                
+
+
                 # init Processing
                 Processing.initialize()
                 # modify processes path and reload algorithms
@@ -558,7 +569,7 @@ class wpsFilter(QgsServerFilter):
                         ProcessingConfig.setSettingValue( 'R_FOLDER', os.path.join( processingPath, 'rscripts' ) )
                         # Reload algorithms
                         Processing.loadAlgorithms()
-                
+
                 crsList = []
                 if pywpsConfig.config.has_section( 'qgis' ) and pywpsConfig.config.has_option( 'qgis', 'input_bbox_crss' ) :
                     inputBBoxCRSs = pywpsConfig.getConfigValue( 'qgis', 'input_bbox_crss' )
@@ -576,10 +587,10 @@ class wpsFilter(QgsServerFilter):
                 if projectPath and os.path.exists( projectPath ) :
                     projectFolder = os.path.dirname( projectPath )
                 QgsMessageLog.logMessage("projectPath "+str(projectPath))
-                
+
                 rasterLayers = []
                 vectorLayers = []
-                
+
                 if projectPath and os.path.exists( projectPath ) :
                     p_dom = minidom.parse( projectPath )
                     for ml in p_dom.getElementsByTagName('maplayer') :
@@ -603,13 +614,13 @@ class wpsFilter(QgsServerFilter):
                                 src = os.path.abspath( os.path.join( projectFolder, src ) )
                             theURIParts[1] = '"' + src + '"'
                             l['datasource'] = ':'.join( theURIParts )
-                            
+
                         if l['type'] == "raster" :
                             rasterLayers.append( l )
                         elif l['type'] == "vector" :
                             l['geometry'] = ml.attributes["geometry"].value
                             vectorLayers.append( l )
-                    
+
                     deafultCrs = ''
                     for mapcanvas in p_dom.getElementsByTagName('mapcanvas'):
                         for destinationsrs in mapcanvas.getElementsByTagName('destinationsrs'):
@@ -621,8 +632,8 @@ class wpsFilter(QgsServerFilter):
                             wmsCrsValue = wmsCrs.childNodes[0].data
                             if wmsCrsValue and wmsCrsValue != defaultCrs:
                                 crsList.append( wmsCrsValue )
-                
-                        
+
+
                 processes = [None] # if no processes found no processes return (deactivate default pywps process)
                 identifier = params.get('IDENTIFIER', '').lower()
                 for i in Processing.algs :
@@ -638,12 +649,12 @@ class wpsFilter(QgsServerFilter):
                             alg = Processing.getAlgorithm( m )
                             if algsFilter.lower() not in alg.name.lower() and algsFilter.lower() not in m.lower():
                                 continue
-                        #QgsMessageLog.logMessage("provider "+i+" "+m)
+                        QgsMessageLog.logMessage("provider "+i+" "+m)
                         processes.append(QGISProcessFactory(m, projectPath, vectorLayers, rasterLayers, crsList))
-                
+
                 #pywpsConfig.setConfigValue("server","outputPath", '/tmp/wpsoutputs')
                 #pywpsConfig.setConfigValue("server","logFile", '/tmp/pywps.log')
-                
+
                 qgisaddress = self.serverInterface().getEnv('SERVER_NAME')+self.serverInterface().getEnv('SCRIPT_NAME')
                 if self.serverInterface().getEnv('HTTPS') :
                     qgisaddress = 'https://'+qgisaddress
@@ -661,13 +672,14 @@ class wpsFilter(QgsServerFilter):
                 #pywpsConfig.setConfigValue("wps","serveraddress", qgisaddress)
                 QgsMessageLog.logMessage("qgisaddress "+qgisaddress)
                 #pywpsConfig.setConfigValue("qgis","qgisserveraddress", qgisaddress)
-                
+
                 # init wps
                 method = 'GET'
                 if request_body :
                     method = 'POST'
+                QgsMessageLog.logMessage("method "+method)
                 wps = pywps.Pywps(method)
-                
+
                 # create the request file for POST request
                 if request_body :
                     tmpPath=pywpsConfig.getConfigValue("server","tempPath")
@@ -676,29 +688,37 @@ class wpsFilter(QgsServerFilter):
                     requestFile.close()
                     requestFile = open(os.path.join(tmpPath, "request-"+str(wps.UUID)),"r")
                     inputQuery = requestFile
-                    
+
                 if wps.parseRequest(inputQuery):
-                    response = wps.performRequest(processes=processes)
-                    if response:
-                        request.clearHeaders()
-                        request.clearBody()
-                        #request.setHeader('Content-type', 'text/xml')
-                        QgsMessageLog.logMessage("contentType "+wps.request.contentType)
-                        request.setInfoFormat(wps.request.contentType)
-                        resp = wps.response
-                        if wps.request.contentType == 'application/xml':
-                            import re
-                            import xml.sax.saxutils as saxutils
-                            resp = re.sub(r'Get xlink:href=".*"', 'Get xlink:href="'+saxutils.escape(qgisaddress)+'"', resp)
-                            resp = re.sub(r'Post xlink:href=".*"', 'Post xlink:href="'+saxutils.escape(qgisaddress)+'"', resp)
-                        # test response type
-                        if isinstance( resp, file ) :
-                            request.appendBody(resp.read())
+                    try:
+                        response = wps.performRequest(processes=processes)
+                        if response:
+                            request.clearHeaders()
+                            request.clearBody()
+                            #request.setHeader('Content-type', 'text/xml')
+                            QgsMessageLog.logMessage("contentType "+wps.request.contentType)
+                            request.setInfoFormat(wps.request.contentType)
+                            resp = wps.response
+                            if wps.request.contentType == 'application/xml':
+                                import re
+                                import xml.sax.saxutils as saxutils
+                                resp = re.sub(r'Get xlink:href=".*"', 'Get xlink:href="'+saxutils.escape(qgisaddress)+'"', resp)
+                                resp = re.sub(r'Post xlink:href=".*"', 'Post xlink:href="'+saxutils.escape(qgisaddress)+'"', resp)
+                            # test response type
+                            if isinstance( resp, file ) :
+                                request.appendBody(resp.read())
+                            else:
+                                request.appendBody(resp)
                         else:
-                            request.appendBody(resp)
+                            QgsMessageLog.logMessage("no response")
+                    except:
+                        QgsMessageLog.logMessage("Exception perform request")
+                else:
+                    QgsMessageLog.logMessage("parseRequest False")
             except WPSException,e:
-                        request.clearHeaders()
-                        #request.setHeader('Content-type', 'text/xml')
-                        request.clearBody()
-                        request.setInfoFormat('text/xml')
-                        request.appendBody(e.__str__())
+                QgsMessageLog.logMessage("WPSException")
+                request.clearHeaders()
+                #request.setHeader('Content-type', 'text/xml')
+                request.clearBody()
+                request.setInfoFormat('text/xml')
+                request.appendBody(e.__str__())
