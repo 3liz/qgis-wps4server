@@ -37,11 +37,11 @@ First step is to add debian gis repository, add the following repository:
 $ cat /etc/apt/sources.list.d/debian-gis.list
 deb http://qgis.org/debian trusty main
 deb-src http://qgis.org/debian trusty main
- 
+
 $ # Add keys
 $ sudo gpg --recv-key DD45F6C3
 $ sudo gpg --export --armor DD45F6C3 | sudo apt-key add -
- 
+
 $ # Update package list
 $ sudo apt-get update && sudo apt-get upgrade
 ```
@@ -61,7 +61,7 @@ $ cd /opt/qgis-server/plugins
 $ sudo wget https://github.com/3liz/qgis-wps4server/archive/master.zip
 $ # In case unzip was not installed before:
 $ sudo apt-get install unzip
-$ sudo unzip master.zip 
+$ sudo unzip master.zip
 $ sudo mv qgis-wps4server-master wps4server
 ```
 
@@ -84,12 +84,12 @@ The virtual host configuration, stored in /etc/apache2/sites-available/001-qgis-
     <VirtualHost *:81>
         ServerAdmin webmaster@localhost
         DocumentRoot /var/www/html
-     
+
         ErrorLog ${APACHE_LOG_DIR}/qgis-server-error.log
         CustomLog ${APACHE_LOG_DIR}/qgis-server-access.log combined
-     
+
         # Longer timeout for WPS... default = 40
-        FcgidIOTimeout 120 
+        FcgidIOTimeout 120
         FcgidInitialEnv LC_ALL "en_US.UTF-8"
         FcgidInitialEnv PYTHONIOENCODING UTF-8
         FcgidInitialEnv LANG "en_US.UTF-8"
@@ -97,14 +97,14 @@ The virtual host configuration, stored in /etc/apache2/sites-available/001-qgis-
         FcgidInitialEnv QGIS_SERVER_LOG_FILE /tmp/qgis-000.log
         FcgidInitialEnv QGIS_SERVER_LOG_LEVEL 0
         FcgidInitialEnv QGIS_PLUGINPATH "/opt/qgis-server/plugins"
-     
+
         # ABP: needed for QGIS HelloServer plugin HTTP BASIC auth
         <IfModule mod_fcgid.c>
             RewriteEngine on
             RewriteCond %{HTTP:Authorization} .
             RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
         </IfModule>
-     
+
         ScriptAlias /cgi-bin/ /usr/lib/cgi-bin/
         <Directory "/usr/lib/cgi-bin">
             AllowOverride All
@@ -146,6 +146,10 @@ The **qgis** section contains:
 * **providers** the processes provider list to publish through WPS; by default all processes providers are published; you can select in this list *qgis,gdalogr,script,model,r,grass,grass70,saga,otb*
 * **algs_filter** a string to filter processes based on name and title
 * **algs** a list of processes to publish; for example *qgis:fixeddistancebuffer,qgis:delaunaytriangulation,qgis:concavehull*
+* **input_bbox_crss** a list of available input bounding box CRSs
+* **output_ows_crss** a list of available CRSs for Opengis Web Service output
+* **outputs_minetypes_vector** a list of available output mimeTypes for vector, this parameter is made for reducing the list and select the default one
+* **outputs_minetypes_raster** a list of available output mimeTypes for raster, this parameter is made for reducing the list and select the default one
 
 To use an other config file than the default one, you can use:
 * **CONFIG** parameter in the URL

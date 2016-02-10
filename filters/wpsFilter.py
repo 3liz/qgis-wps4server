@@ -157,8 +157,7 @@ def QGISProcessFactory(alg_name, project='', vectors=[], rasters=[], crss=[]):
             # parm.__class__, one of
             # ['Output', 'OutputDirectory', 'OutputExtent', 'OutputFile', 'OutputHtml', 'OutputNumber', 'OutputRaster', 'OutputString', 'OutputTable', 'OutputVector']
             if parm.__class__.__name__ == 'OutputVector':
-                self._outputs['Output%s' % i] = self.addComplexOutput(parm.name, parm.description,
-                    formats = [{
+                outputFormats = [{
                         'mimeType':'text/xml',
                         'encoding': 'utf-8'
                     },{
@@ -192,12 +191,18 @@ def QGISProcessFactory(alg_name, project='', vectors=[], rasters=[], crss=[]):
                         'mimeType':'application/x-ogc-wfs',
                         'encoding': 'utf-8'
                     }]
+                if pywpsConfig.config.has_option( 'qgis', 'outputs_minetypes_vector' ) :
+                    outputsMimetypes = pywpsConfig.getConfigValue( 'qgis', 'outputs_minetypes_vector' ).strip()
+                    if outputsMimetypes:
+                        outputsMimetypes = outputsMimetypes.split(',')
+                        outputFormats = [{'mimeType':m.strip(),'encoding': 'utf-8'} for m in outputsMimetypes]
+                self._outputs['Output%s' % i] = self.addComplexOutput(parm.name, parm.description,
+                    formats = outputFormats
                 )
                 if pywpsConfig.getConfigValue("qgis","qgisserveraddress") :
                     self._outputs['Output%s' % i].useQgisServer = True
             elif parm.__class__.__name__ == 'OutputRaster':
-                self._outputs['Output%s' % i] = self.addComplexOutput(parm.name, parm.description,
-                    formats = [{
+                outputFormats= [{
                         'mimeType':'image/tiff'
                     },{
                         'mimeType':'application/x-ogc-wms',
@@ -205,7 +210,15 @@ def QGISProcessFactory(alg_name, project='', vectors=[], rasters=[], crss=[]):
                     },{
                         'mimeType':'application/x-ogc-wcs',
                         'encoding': 'utf-8'
-                    }])
+                    }]
+                if pywpsConfig.config.has_option( 'qgis', 'outputs_minetypes_raster' ) :
+                    outputsMimetypes = pywpsConfig.getConfigValue( 'qgis', 'outputs_minetypes_raster' ).strip()
+                    if outputsMimetypes:
+                        outputsMimetypes = outputsMimetypes.split(',')
+                        outputFormats = [{'mimeType':m.strip(),'encoding': 'utf-8'} for m in outputsMimetypes]
+                self._outputs['Output%s' % i] = self.addComplexOutput(parm.name, parm.description,
+                    formats = outputFormats
+                )
                 if pywpsConfig.getConfigValue("qgis","qgisserveraddress") :
                     self._outputs['Output%s' % i].useQgisServer = True
             elif parm.__class__.__name__ == 'OutputTable':
