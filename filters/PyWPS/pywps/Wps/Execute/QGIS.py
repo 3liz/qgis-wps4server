@@ -84,11 +84,9 @@ class QGIS:
         outputLayer = None
         if not layersByName :
             outputLayer = QgsRasterLayer( output.value, output.identifier, 'gdal' )
-            if outputLayer.isValid() :
-                mlr.addMapLayer( outputLayer )
-            else :
+            if !outputLayer.isValid() :
                 outputLayer = QgsVectorLayer( output.value, output.identifier, 'ogr' )
-                mlr.addMapLayer( outputLayer )
+            mlr.addMapLayer( outputLayer )
         else :
             outputLayer = layersByName[0]
 

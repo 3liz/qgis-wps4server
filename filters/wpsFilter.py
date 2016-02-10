@@ -386,14 +386,15 @@ def QGISProcessFactory(alg_name, project='', vectors=[], rasters=[], crss=[]):
                 # Update CRS
                 if not outputLayer.dataProvider().crs().authid():
                     outputLayer.setCrs( inputCrs )
-                    v.projection = inputCrs
                 # define destination CRS
                 destCrs = None
                 if outputLayer.crs().authid().startswith( 'USER:' ):
                     if crss:
                         destCrs = QgsCoordinateReferenceSystem( str( crss[0] ) )
+                        v.projection = str( crss[0] )
                     else:
                         destCrs = QgsCoordinateReferenceSystem( 'EPSG:4326' )
+                        v.projection = 'EPSG:4326'
                 # define the file extension
                 outputExt = 'gml'
                 if v.format['mimetype'] == 'application/json':
