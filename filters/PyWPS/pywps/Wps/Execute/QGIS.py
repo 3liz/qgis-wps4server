@@ -92,7 +92,7 @@ class QGIS:
 
         # Update CRS
         if not outputLayer.dataProvider().crs().authid() and output.projection:
-            outputLayer.setCrs( output.projection )
+            outputLayer.setCrs( QgsCoordinateReferenceSystem(output.projection) )
 
         treeRoot = self.project.layerTreeRoot()
         if config.config.has_section( 'qgis' ) and config.config.has_option( 'qgis', 'output_ows_crss' ) :

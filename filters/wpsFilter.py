@@ -471,7 +471,7 @@ def QGISProcessFactory(alg_name, project='', vectors=[], rasters=[], crss=[]):
                 # Update CRS
                 if not outputLayer.dataProvider().crs().authid():
                     outputLayer.setCrs( inputCrs )
-                    v.projection = inputCrs
+                    v.projection = inputCrs.authid()
                 if not outputName :
                   return 'No output file'
                 args[v.identifier] = outputName
