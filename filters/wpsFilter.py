@@ -293,8 +293,8 @@ def QGISProcessFactory(alg_name, project='', vectors=[], rasters=[], crss=[]):
                         o = open( fileName+'.gml', 'w' )
                         o.write( f.read() )
                         o.close()
-                    import shutil
-                    shutil.copy2(fileName+'.gml', '/tmp/test.gml' )
+                    #import shutil
+                    #shutil.copy2(fileName+'.gml', '/tmp/test.gml' )
                     # get layer
                     layer = QgsVectorLayer( fileName+'.gml', fileInfo.baseName(), 'ogr' )
                     pr = layer.dataProvider()
