@@ -564,6 +564,13 @@ class wpsFilter(QgsServerFilter):
 
                 # init Processing
                 Processing.initialize()
+                # load QGIS Processing config
+                if pywpsConfig.config.has_section( 'qgis_processing' ):
+                    for opt in config.config.options( 'qgis_processing' ):
+                        opt_val = config.getConfigValue( 'qgis_processing', opt )
+                        ProcessingConfig.setSettingValue( opt.upper(), opt_val )
+                    # Reload algorithms
+                    Processing.loadAlgorithms()
                 # modify processes path and reload algorithms
                 if pywpsConfig.config.has_section( 'qgis' ) and pywpsConfig.config.has_option( 'qgis', 'processing_folder' ) :
                     processingPath = pywpsConfig.getConfigValue( 'qgis', 'processing_folder' )
