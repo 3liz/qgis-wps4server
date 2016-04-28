@@ -566,8 +566,8 @@ class wpsFilter(QgsServerFilter):
                 Processing.initialize()
                 # load QGIS Processing config
                 if pywpsConfig.config.has_section( 'qgis_processing' ):
-                    for opt in config.config.options( 'qgis_processing' ):
-                        opt_val = config.getConfigValue( 'qgis_processing', opt )
+                    for opt in pywpsConfig.config.options( 'qgis_processing' ):
+                        opt_val = pywpsConfig.getConfigValue( 'qgis_processing', opt )
                         ProcessingConfig.setSettingValue( opt.upper(), opt_val )
                     # Reload algorithms
                     Processing.loadAlgorithms()
