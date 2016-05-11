@@ -587,7 +587,7 @@ class wpsFilter(QgsServerFilter):
                     if os.path.exists( processingPath ) and os.path.isdir( processingPath ) :
                         ProcessingConfig.setSettingValue( 'MODELS_FOLDER', os.path.join( processingPath, 'models' ) )
                         ProcessingConfig.setSettingValue( 'SCRIPTS_FOLDER', os.path.join( processingPath, 'scripts' ) )
-                        ProcessingConfig.setSettingValue( 'R_FOLDER', os.path.join( processingPath, 'rscripts' ) )
+                        ProcessingConfig.setSettingValue( 'R_SCRIPTS_FOLDER', os.path.join( processingPath, 'rscripts' ) )
                         # Reload algorithms
                         Processing.loadAlgorithms()
 
