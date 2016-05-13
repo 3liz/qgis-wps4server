@@ -383,6 +383,12 @@ def QGISProcessFactory(alg_name, project='', vectors=[], rasters=[], crss=[]):
                 outputInfo = QFileInfo( outputName )
                 # get the output QGIS vector layer
                 outputLayer = QgsVectorLayer( outputName, outputInfo.baseName(), 'ogr' )
+                # Update input CRS
+                if not inputCrs.authid():
+                    inputCrs.saveAsUserCRS('');
+                    crs = QgsCoordinateReferenceSystem()
+                    crs.createFromProj4(inputCrs.toProj4())
+                    inputCrs = crs
                 # Update CRS
                 if not outputLayer.dataProvider().crs().authid():
                     outputLayer.setCrs( inputCrs )
