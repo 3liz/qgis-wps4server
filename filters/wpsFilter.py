@@ -607,8 +607,10 @@ class wpsFilter(QgsServerFilter):
                     for opt in pywpsConfig.config.options( 'qgis_processing' ):
                         opt_val = pywpsConfig.getConfigValue( 'qgis_processing', opt )
                         ProcessingConfig.setSettingValue( opt.upper(), opt_val )
-                    # Reload algorithms
-                    Processing.loadAlgorithms()
+                    # Reload algorithms 2.14
+                    # Processing.loadAlgorithms()
+                    # Reload algorithms 2.16
+                    Processing.updateAlgsList()
                 # modify processes path and reload algorithms
                 if pywpsConfig.config.has_section( 'qgis' ) and pywpsConfig.config.has_option( 'qgis', 'processing_folder' ) :
                     processingPath = pywpsConfig.getConfigValue( 'qgis', 'processing_folder' )
@@ -626,9 +628,12 @@ class wpsFilter(QgsServerFilter):
                         ProcessingConfig.setSettingValue( 'MODELS_FOLDER', os.path.join( processingPath, 'models' ) )
                         ProcessingConfig.setSettingValue( 'SCRIPTS_FOLDER', os.path.join( processingPath, 'scripts' ) )
                         ProcessingConfig.setSettingValue( 'R_SCRIPTS_FOLDER', os.path.join( processingPath, 'rscripts' ) )
-                        # Reload algorithms
-                        Processing.loadAlgorithms()
-
+                        # Reload algorithms 2.14
+                        # Processing.loadAlgorithms()
+                        # Reload algorithms 2.16
+                        Processing.updateAlgsList()
+                # Reload provider model 2.16
+                Processing.reloadProvider('model')
                 crsList = []
                 if pywpsConfig.config.has_section( 'qgis' ) and pywpsConfig.config.has_option( 'qgis', 'input_bbox_crss' ) :
                     inputBBoxCRSs = pywpsConfig.getConfigValue( 'qgis', 'input_bbox_crss' )
@@ -695,11 +700,16 @@ class wpsFilter(QgsServerFilter):
 
                 processes = [None] # if no processes found no processes return (deactivate default pywps process)
                 identifier = params.get('IDENTIFIER', '').lower()
-                for i in Processing.algs :
+                # alg list in 2.14
+                #for i in Processing.algs :
+                # alg list in 2.14 and 2.16
+                processingAlgs = Processing.algs()
+                for i in processingAlgs :
+                    QgsMessageLog.logMessage("provider "+i+" "+str(len(processingAlgs[i])))
                     if providerList and i not in providerList :
                         continue
-                    QgsMessageLog.logMessage("provider "+i+" "+str(len(Processing.algs[i])))
-                    for m in Processing.algs[i]:
+                    QgsMessageLog.logMessage("provider "+i+" "+str(len(processingAlgs[i])))
+                    for m in processingAlgs[i]:
                         if identifier and identifier != m :
                             continue
                         if algList and m not in algList :
@@ -781,3 +791,6 @@ class wpsFilter(QgsServerFilter):
                 request.clearBody()
                 request.setInfoFormat('text/xml')
                 request.appendBody(e.__str__())
+            except:
+                e = sys.exc_info()[0]
+                QgsMessageLog.logMessage("except "+e.__str__())
