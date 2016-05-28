@@ -24,6 +24,8 @@ from PyQt4.QtCore import *
 
 import os
 import sys
+import json
+import re
 
 sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'PyWPS'))
 import pywps
@@ -48,6 +50,10 @@ def QGISProcessFactory(alg_name, project='', vectors=[], rasters=[], crss=[]):
     class_name = alg_name.replace(':', '_')
     alg = Processing.getAlgorithm(alg_name)
 
+    algDesc = str(alg)
+    algDesc = re.sub(r'[^\x00-\x7F]', '@', alg.shortHelp())
+    algDesc = algDesc.replace('<p></p>','')
+
     # layer inputs
     rasterLayers = rasters
     vectorLayers = vectors
@@ -60,13 +66,16 @@ def QGISProcessFactory(alg_name, project='', vectors=[], rasters=[], crss=[]):
             version = "0.1",
             storeSupported = "true",
             statusSupported = "true",
-            abstract= '<![CDATA[' + str(alg) + ']]>',
+            abstract= '<![CDATA[' + algDesc + ']]>',
             grassLocation=False)
         self.alg = alg
 
         # Test parameters
         if not len( self.alg.parameters ):
             self.alg.defineCharacteristics()
+
+        # Get parameters description
+        algParamDescs = alg.getParameterDescriptions()
 
         # Add I/O
         i = 1
@@ -75,6 +84,9 @@ def QGISProcessFactory(alg_name, project='', vectors=[], rasters=[], crss=[]):
             if getattr(parm, 'optional', False):
                 minOccurs = 0
 
+            parmDesc = ''
+            if parm.name in algParamDescs:
+                parmDesc = algParamDescs[parm.name]
             # TODO: create "LiteralValue", "ComplexValue" or "BoundingBoxValue"
             # this can be done checking the class:
             # parm.__class__, one of
@@ -91,37 +103,51 @@ def QGISProcessFactory(alg_name, project='', vectors=[], rasters=[], crss=[]):
                     if ParameterVector.VECTOR_TYPE_POLYGON in parm.shapetype :
                         values += [l['name'] for l in vectorLayers if l['geometry'] == 'Polygon']
                 if values :
-                    self._inputs['Input%s' % i] = self.addLiteralInput(escape(parm.name), '<![CDATA[' + parm.description + ']]>',
+                    self._inputs['Input%s' % i] = self.addLiteralInput(escape(parm.name),
+                                                    escape(parm.description).replace('\\',''),
+                                                    '<![CDATA[' + parmDesc + ']]>',
                                                     minOccurs=minOccurs,
                                                     type=types.StringType)
                     self._inputs['Input%s' % i].values = values
                 else :
-                    self._inputs['Input%s' % i] = self.addComplexInput(escape(parm.name), '<![CDATA[' + parm.description + ']]>',
+                    self._inputs['Input%s' % i] = self.addComplexInput(escape(parm.name),
+                                                    escape(parm.description).replace('\\',''),
+                                                    '<![CDATA[' + parmDesc + ']]>',
                         minOccurs=minOccurs, formats = [{'mimeType':'text/xml'}])
 
             elif parm.__class__.__name__ == 'ParameterRaster':
                 if rasterLayers :
-                    self._inputs['Input%s' % i] = self.addLiteralInput(escape(parm.name), '<![CDATA[' + parm.description + ']]>',
+                    self._inputs['Input%s' % i] = self.addLiteralInput(escape(parm.name),
+                                                    escape(parm.description).replace('\\',''),
+                                                    '<![CDATA[' + parmDesc + ']]>',
                                                     minOccurs=minOccurs,
                                                     type=types.StringType)
                     self._inputs['Input%s' % i].values = [l['name'] for l in rasterLayers]
                 else :
-                    self._inputs['Input%s' % i] = self.addComplexInput(escape(parm.name), '<![CDATA[' + parm.description + ']]>',
+                    self._inputs['Input%s' % i] = self.addComplexInput(escape(parm.name),
+                                                    escape(parm.description).replace('\\',''),
+                                                    '<![CDATA[' + parmDesc + ']]>',
                         minOccurs=minOccurs, formats = [{'mimeType':'image/tiff'}])
 
             elif parm.__class__.__name__ == 'ParameterTable':
-                self._inputs['Input%s' % i] = self.addComplexInput(escape(parm.name), '<![CDATA[' + parm.description + ']]>',
+                self._inputs['Input%s' % i] = self.addComplexInput(escape(parm.name),
+                                                    escape(parm.description).replace('\\',''),
+                                                    '<![CDATA[' + parmDesc + ']]>',
                     minOccurs=minOccurs, formats = [{'mimeType':'text/csv'}])
 
             elif parm.__class__.__name__ == 'ParameterExtent':
-                self._inputs['Input%s' % i] = self.addBBoxInput(escape(parm.name), '<![CDATA[' + parm.description + ']]>',
+                self._inputs['Input%s' % i] = self.addBBoxInput(escape(parm.name),
+                                                    escape(parm.description).replace('\\',''),
+                                                    '<![CDATA[' + parmDesc + ']]>',
                     minOccurs=minOccurs)
                 # Add supported CRSs from project or config
                 if crss:
                     self._inputs['Input%s' % i].crss = crss
 
             elif parm.__class__.__name__ == 'ParameterSelection':
-                self._inputs['Input%s' % i] = self.addLiteralInput(escape(parm.name), '<![CDATA[' + parm.description + ']]>',
+                self._inputs['Input%s' % i] = self.addLiteralInput(escape(parm.name),
+                                                    escape(parm.description).replace('\\',''),
+                                                    '<![CDATA[' + parmDesc + ']]>',
                                                 minOccurs=minOccurs,
                                                 type=types.StringType,
                                                 default=getattr(parm, 'default', None))
@@ -131,7 +157,9 @@ def QGISProcessFactory(alg_name, project='', vectors=[], rasters=[], crss=[]):
                 tokens = parm.default.split(',')
                 n1 = float(tokens[0])
                 n2 = float(tokens[1])
-                self._inputs['Input%s' % i] = self.addLiteralInput(escape(parm.name), '<![CDATA[' + parm.description + ']]>',
+                self._inputs['Input%s' % i] = self.addLiteralInput(escape(parm.name),
+                                                    escape(parm.description).replace('\\',''),
+                                                    '<![CDATA[' + parmDesc + ']]>',
                                                 minOccurs=minOccurs,
                                                 type=types.FloatType,
                                                 default=n1)
@@ -143,7 +171,9 @@ def QGISProcessFactory(alg_name, project='', vectors=[], rasters=[], crss=[]):
                     type = types.BooleanType
                 elif  parm.__class__.__name__ =='ParameterNumber':
                     type = types.FloatType
-                self._inputs['Input%s' % i] = self.addLiteralInput(escape(parm.name), '<![CDATA[' + parm.description + ']]>',
+                self._inputs['Input%s' % i] = self.addLiteralInput(escape(parm.name),
+                                                    escape(parm.description).replace('\\',''),
+                                                    '<![CDATA[' + parmDesc + ']]>',
                                                 minOccurs=minOccurs,
                                                 type=type,
                                                 default=getattr(parm, 'default', None))
