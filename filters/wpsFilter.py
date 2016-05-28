@@ -50,8 +50,10 @@ def QGISProcessFactory(alg_name, project='', vectors=[], rasters=[], crss=[]):
     class_name = alg_name.replace(':', '_')
     alg = Processing.getAlgorithm(alg_name)
 
-    algDesc = str(alg)
-    algDesc = re.sub(r'[^\x00-\x7F]', '@', alg.shortHelp())
+    algDesc = alg.shortHelp()
+    if not algDesc:
+        algDesc = str(alg)
+    algDesc = re.sub(r'[^\x00-\x7F]', '@', algDesc)
     algDesc = algDesc.replace('<p></p>','')
 
     # layer inputs
