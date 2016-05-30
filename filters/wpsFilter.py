@@ -87,7 +87,7 @@ def QGISProcessFactory(alg_name, project='', vectors=[], rasters=[], crss=[]):
                 minOccurs = 0
 
             parmDesc = ''
-            if parm.name in algParamDescs:
+            if algParamDescs and parm.name in algParamDescs:
                 parmDesc = algParamDescs[parm.name]
             # TODO: create "LiteralValue", "ComplexValue" or "BoundingBoxValue"
             # this can be done checking the class:
