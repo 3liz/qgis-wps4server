@@ -52,9 +52,11 @@ def QGISProcessFactory(alg_name, project='', vectors=[], rasters=[], crss=[]):
 
     algDesc = alg.shortHelp()
     if not algDesc:
-        algDesc = str(alg)
-    algDesc = re.sub(r'[^\x00-\x7F]', '@', algDesc)
-    algDesc = algDesc.replace('<p></p>','')
+        algDesc = ''
+    else:
+        algDesc = re.sub(r'[^\x00-\x7F]', '@', algDesc)
+        algDesc = algDesc.replace('<p></p>','')
+        algDesc = '<![CDATA[' + algDesc + ']]>'
 
     # layer inputs
     rasterLayers = rasters
@@ -68,7 +70,7 @@ def QGISProcessFactory(alg_name, project='', vectors=[], rasters=[], crss=[]):
             version = "0.1",
             storeSupported = "true",
             statusSupported = "true",
-            abstract= '<![CDATA[' + algDesc + ']]>',
+            abstract= algDesc,
             grassLocation=False)
         self.alg = alg
 
@@ -89,6 +91,7 @@ def QGISProcessFactory(alg_name, project='', vectors=[], rasters=[], crss=[]):
             parmDesc = ''
             if algParamDescs and parm.name in algParamDescs:
                 parmDesc = algParamDescs[parm.name]
+                parmDesc = '<![CDATA[' + parmDesc + ']]>'
             # TODO: create "LiteralValue", "ComplexValue" or "BoundingBoxValue"
             # this can be done checking the class:
             # parm.__class__, one of
@@ -107,40 +110,40 @@ def QGISProcessFactory(alg_name, project='', vectors=[], rasters=[], crss=[]):
                 if values :
                     self._inputs['Input%s' % i] = self.addLiteralInput(escape(parm.name),
                                                     escape(parm.description).replace('\\',''),
-                                                    '<![CDATA[' + parmDesc + ']]>',
+                                                    parmDesc,
                                                     minOccurs=minOccurs,
                                                     type=types.StringType)
                     self._inputs['Input%s' % i].values = values
                 else :
                     self._inputs['Input%s' % i] = self.addComplexInput(escape(parm.name),
                                                     escape(parm.description).replace('\\',''),
-                                                    '<![CDATA[' + parmDesc + ']]>',
+                                                    parmDesc,
                         minOccurs=minOccurs, formats = [{'mimeType':'text/xml'}])
 
             elif parm.__class__.__name__ == 'ParameterRaster':
                 if rasterLayers :
                     self._inputs['Input%s' % i] = self.addLiteralInput(escape(parm.name),
                                                     escape(parm.description).replace('\\',''),
-                                                    '<![CDATA[' + parmDesc + ']]>',
+                                                    parmDesc,
                                                     minOccurs=minOccurs,
                                                     type=types.StringType)
                     self._inputs['Input%s' % i].values = [l['name'] for l in rasterLayers]
                 else :
                     self._inputs['Input%s' % i] = self.addComplexInput(escape(parm.name),
                                                     escape(parm.description).replace('\\',''),
-                                                    '<![CDATA[' + parmDesc + ']]>',
+                                                    parmDesc,
                         minOccurs=minOccurs, formats = [{'mimeType':'image/tiff'}])
 
             elif parm.__class__.__name__ == 'ParameterTable':
                 self._inputs['Input%s' % i] = self.addComplexInput(escape(parm.name),
                                                     escape(parm.description).replace('\\',''),
-                                                    '<![CDATA[' + parmDesc + ']]>',
+                                                    parmDesc,
                     minOccurs=minOccurs, formats = [{'mimeType':'text/csv'}])
 
             elif parm.__class__.__name__ == 'ParameterExtent':
                 self._inputs['Input%s' % i] = self.addBBoxInput(escape(parm.name),
                                                     escape(parm.description).replace('\\',''),
-                                                    '<![CDATA[' + parmDesc + ']]>',
+                                                    parmDesc,
                     minOccurs=minOccurs)
                 # Add supported CRSs from project or config
                 if crss:
@@ -149,7 +152,7 @@ def QGISProcessFactory(alg_name, project='', vectors=[], rasters=[], crss=[]):
             elif parm.__class__.__name__ == 'ParameterSelection':
                 self._inputs['Input%s' % i] = self.addLiteralInput(escape(parm.name),
                                                     escape(parm.description).replace('\\',''),
-                                                    '<![CDATA[' + parmDesc + ']]>',
+                                                    parmDesc,
                                                 minOccurs=minOccurs,
                                                 type=types.StringType,
                                                 default=getattr(parm, 'default', None))
@@ -161,7 +164,7 @@ def QGISProcessFactory(alg_name, project='', vectors=[], rasters=[], crss=[]):
                 n2 = float(tokens[1])
                 self._inputs['Input%s' % i] = self.addLiteralInput(escape(parm.name),
                                                     escape(parm.description).replace('\\',''),
-                                                    '<![CDATA[' + parmDesc + ']]>',
+                                                    parmDesc,
                                                 minOccurs=minOccurs,
                                                 type=types.FloatType,
                                                 default=n1)
@@ -175,7 +178,7 @@ def QGISProcessFactory(alg_name, project='', vectors=[], rasters=[], crss=[]):
                     type = types.FloatType
                 self._inputs['Input%s' % i] = self.addLiteralInput(escape(parm.name),
                                                     escape(parm.description).replace('\\',''),
-                                                    '<![CDATA[' + parmDesc + ']]>',
+                                                    parmDesc,
                                                 minOccurs=minOccurs,
                                                 type=type,
                                                 default=getattr(parm, 'default', None))
