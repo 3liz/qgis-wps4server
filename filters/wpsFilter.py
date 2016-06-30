@@ -777,10 +777,17 @@ class wpsFilter(QgsServerFilter):
                         QgsMessageLog.logMessage("Exception perform request")
                 else:
                     QgsMessageLog.logMessage("parseRequest False")
-            except WPSException,e:
-                QgsMessageLog.logMessage("WPSException")
+            except WPSException as e:
+                QgsMessageLog.logMessage("WPSException: " + str(e))
                 request.clearHeaders()
                 #request.setHeader('Content-type', 'text/xml')
                 request.clearBody()
                 request.setInfoFormat('text/xml')
-                request.appendBody(e.__str__())
+                request.appendBody(str(e))
+            except Exception as e :
+                QgsMessageLog.logMessage("Exception: " + str(e))
+                request.clearHeaders()
+                #request.setHeader('Content-type', 'text/xml')
+                request.clearBody()
+                request.setInfoFormat('text/xml')
+                request.appendBody(str(e))
