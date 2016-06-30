@@ -616,14 +616,21 @@ class wpsFilter(QgsServerFilter):
                 if pywpsConfig.config.has_section( 'qgis' ) and pywpsConfig.config.has_option( 'qgis', 'processing_folder' ) :
                     processingPath = pywpsConfig.getConfigValue( 'qgis', 'processing_folder' )
                     if not os.path.exists( processingPath ):
-                        configFilesLocation = pywpsConfig._getDefaultConfigFilesLocation()
-                        for configFileLocation in configFilesLocation:
-                            if os.path.exists( configFileLocation ) :
-                                processingPath = os.path.join(
-                                    os.path.dirname( configFileLocation ),
-                                    processingPath
-                                )
-                                processingPath = os.path.abspath( processingPath )
+                        if configPath and os.path.exists( configPath ):
+                            processingPath = os.path.join(
+                                os.path.dirname( configPath ),
+                                processingPath
+                            )
+                            processingPath = os.path.abspath( processingPath )
+                        else:
+                            configFilesLocation = pywpsConfig._getDefaultConfigFilesLocation()
+                            for configFileLocation in configFilesLocation:
+                                if os.path.exists( configFileLocation ) :
+                                    processingPath = os.path.join(
+                                        os.path.dirname( configFileLocation ),
+                                        processingPath
+                                    )
+                                    processingPath = os.path.abspath( processingPath )
                     QgsMessageLog.logMessage("processing_folder: "+processingPath)
                     if os.path.exists( processingPath ) and os.path.isdir( processingPath ) :
                         ProcessingConfig.setSettingValue( 'MODELS_FOLDER', os.path.join( processingPath, 'models' ) )
