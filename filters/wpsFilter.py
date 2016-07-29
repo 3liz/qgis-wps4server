@@ -768,11 +768,17 @@ class wpsFilter(QgsServerFilter):
                             QgsMessageLog.logMessage("contentType "+wps.request.contentType)
                             request.setInfoFormat(wps.request.contentType)
                             resp = wps.response
-                            if wps.request.contentType == 'application/xml':
+                            if not pywpsConfig.getConfigValue("wps","serveraddress") and wps.request.contentType == 'application/xml':
                                 import re
                                 import xml.sax.saxutils as saxutils
                                 resp = re.sub(r'Get xlink:href=".*"', 'Get xlink:href="'+saxutils.escape(qgisaddress)+'"', resp)
                                 resp = re.sub(r'Post xlink:href=".*"', 'Post xlink:href="'+saxutils.escape(qgisaddress)+'"', resp)
+                            elif pywpsConfig.getConfigValue("wps","serveraddress") and wps.request.contentType == 'application/xml':
+                                import re
+                                m = re.search(r'Get xlink:href="(.*)"',resp)
+                                if m.group(1).count('?') == 2:
+                                    import xml.sax.saxutils as saxutils
+                                    resp = re.sub(r'Get xlink:href=".*"', 'Get xlink:href="'+m.group(1)[:-1]+saxutils.escape('&')+'"', resp)
                             # test response type
                             if isinstance( resp, file ) :
                                 request.appendBody(resp.read())
