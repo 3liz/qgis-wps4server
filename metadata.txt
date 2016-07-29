@@ -18,8 +18,8 @@ server=True
 
 about=wps4server add OGC Web Processing Service capabilities to QGIS server
 
-tracker=http://github.com/rldhont/qgis-wps4server
-repository=http://github.com/rldhont/qgis-wps4server
+tracker=http://github.com/3liz/qgis-wps4server
+repository=http://github.com/3liz/qgis-wps4server
 # End of mandatory metadata
 
 # Recommended items:
@@ -30,7 +30,7 @@ repository=http://github.com/rldhont/qgis-wps4server
 # Tags are comma separated with spaces allowed
 tags=server, wps, ogc
 
-homepage=http://github.com/rldhont/qgis-wps4server
+homepage=http://github.com/3liz/qgis-wps4server
 category=server
 icon=icon.png
 # experimental flag
