@@ -18,7 +18,7 @@ server=True
 
 about=wps4server add OGC Web Processing Service capabilities to QGIS server
 
-tracker=http://github.com/3liz/qgis-wps4server
+tracker=http://github.com/3liz/qgis-wps4server/issues
 repository=http://github.com/3liz/qgis-wps4server
 # End of mandatory metadata
 
