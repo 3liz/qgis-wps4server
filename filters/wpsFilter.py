@@ -776,7 +776,7 @@ class wpsFilter(QgsServerFilter):
                             elif pywpsConfig.getConfigValue("wps","serveraddress") and wps.request.contentType == 'application/xml':
                                 import re
                                 m = re.search(r'Get xlink:href="(.*)"',resp)
-                                if m.group(1).count('?') == 2:
+                                if m and m.group(1).count('?') == 2:
                                     import xml.sax.saxutils as saxutils
                                     resp = re.sub(r'Get xlink:href=".*"', 'Get xlink:href="'+m.group(1)[:-1]+saxutils.escape('&')+'"', resp)
                             # test response type
