@@ -369,6 +369,12 @@ def QGISProcessFactory(alg_name, project='', vectors=[], rasters=[], crss=[]):
                     args[v.identifier] = str(coords[0][0])+','+str(coords[1][0])+','+str(coords[0][1])+','+str(coords[1][1])
                 else:
                     args[v.identifier] = None
+            elif parm.__class__.__name__ == 'ParameterSelection':
+                s = v.getValue()
+                if s:
+                    args[v.identifier] = parm.options.index( s )
+                else:
+                    args[v.identifier] = None
             else:
                 args[v.identifier] = v.getValue()
 
