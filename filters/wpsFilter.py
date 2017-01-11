@@ -364,8 +364,11 @@ def QGISProcessFactory(alg_name, project='', vectors=[], rasters=[], crss=[]):
                     args[v.identifier] = layer
                     inputCrs = layer.crs()
             elif parm.__class__.__name__ == 'ParameterExtent':
-                coords = v.getValue().coords
-                args[v.identifier] = str(coords[0][0])+','+str(coords[1][0])+','+str(coords[0][1])+','+str(coords[1][1])
+                if v.getValue():
+                    coords = v.getValue().coords
+                    args[v.identifier] = str(coords[0][0])+','+str(coords[1][0])+','+str(coords[0][1])+','+str(coords[1][1])
+                else:
+                    args[v.identifier] = None
             else:
                 args[v.identifier] = v.getValue()
 
@@ -375,19 +378,21 @@ def QGISProcessFactory(alg_name, project='', vectors=[], rasters=[], crss=[]):
                 v = getattr(self, k)
                 parm = self.alg.getParameterFromName( v.identifier )
                 if parm.__class__.__name__ == 'ParameterExtent':
-                    coords = v.getValue().coords
-                    coordCrs = None
-                    if v.getValue().crs:
-                        coordCrs = QgsCoordinateReferenceSystem( str( v.getValue().crs ) )
-                    elif crss:
-                        coordCrs = QgsCoordinateReferenceSystem( str( crss[0] ) )
-                    else:
-                        coordCrs = QgsCoordinateReferenceSystem( 'EPSG:4326' )
-                    if coordCrs:
-                        coordExtent = QgsRectangle( coords[0][0], coords[0][1], coords[1][0], coords[1][1] )
-                        xform = QgsCoordinateTransform( coordCrs, inputCrs )
-                        coordExtent = xform.transformBoundingBox( coordExtent )
-                        args[v.identifier] = str(coordExtent.xMinimum())+','+str(coordExtent.xMaximum())+','+str(coordExtent.yMinimum())+','+str(coordExtent.yMaximum())
+                    extent = v.getValue()
+                    if extent:
+                        coords = extent.coords
+                        coordCrs = extent.crs
+                        if coordCrs:
+                            coordCrs = QgsCoordinateReferenceSystem( str( coordCrs ) )
+                        elif crss:
+                            coordCrs = QgsCoordinateReferenceSystem( str( crss[0] ) )
+                        else:
+                            coordCrs = QgsCoordinateReferenceSystem( 'EPSG:4326' )
+                        if coordCrs:
+                            coordExtent = QgsRectangle( coords[0][0], coords[0][1], coords[1][0], coords[1][1] )
+                            xform = QgsCoordinateTransform( coordCrs, inputCrs )
+                            coordExtent = xform.transformBoundingBox( coordExtent )
+                            args[v.identifier] = str(coordExtent.xMinimum())+','+str(coordExtent.xMaximum())+','+str(coordExtent.yMinimum())+','+str(coordExtent.yMaximum())
 
         # Adds None for output parameter(s)
         for k in self._outputs:
