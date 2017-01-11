@@ -424,19 +424,19 @@ def QGISProcessFactory(alg_name, project='', vectors=[], rasters=[], crss=[]):
             if parm.__class__.__name__ == 'OutputVector':
                 outputName = result.get(v.identifier, None)
                 if not outputName :
-                  return 'No output file'
+                    return 'No output file'
                 # get output file info
                 outputInfo = QFileInfo( outputName )
                 # get the output QGIS vector layer
                 outputLayer = QgsVectorLayer( outputName, outputInfo.baseName(), 'ogr' )
                 # Update input CRS
-                if not inputCrs.authid():
+                if inputCrs and not inputCrs.authid():
                     inputCrs.saveAsUserCRS('');
                     crs = QgsCoordinateReferenceSystem()
                     crs.createFromProj4(inputCrs.toProj4())
                     inputCrs = crs
                 # Update CRS
-                if not outputLayer.dataProvider().crs().authid():
+                if inputCrs and not outputLayer.dataProvider().crs().authid():
                     outputLayer.setCrs( inputCrs )
                 # define destination CRS
                 destCrs = None
@@ -516,16 +516,22 @@ def QGISProcessFactory(alg_name, project='', vectors=[], rasters=[], crss=[]):
             # Output Raster
             elif parm.__class__.__name__ == 'OutputRaster':
                 outputName = result.get(v.identifier, None)
+                if not outputName :
+                    return 'No output file'
                 # get output file info
                 outputInfo = QFileInfo( outputName )
                 # get the output QGIS vector layer
                 outputLayer = QgsRasterLayer( outputName, outputInfo.baseName(), 'gdal' )
+                # Update input CRS
+                if inputCrs and not inputCrs.authid():
+                    inputCrs.saveAsUserCRS('');
+                    crs = QgsCoordinateReferenceSystem()
+                    crs.createFromProj4(inputCrs.toProj4())
+                    inputCrs = crs
                 # Update CRS
-                if not outputLayer.dataProvider().crs().authid():
+                if inputCrs and not outputLayer.dataProvider().crs().authid():
                     outputLayer.setCrs( inputCrs )
                     v.projection = 'proj4:'+inputCrs.toProj4()
-                if not outputName :
-                  return 'No output file'
                 args[v.identifier] = outputName
 
                 # get OWS getCapabilities URL
