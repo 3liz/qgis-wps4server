@@ -262,6 +262,25 @@ def QGISProcessFactory(alg_name, project='', vectors=[], rasters=[], crss=[]):
             elif parm.__class__.__name__ == 'OutputHtml':
                 self._outputs['Output%s' % i] = self.addComplexOutput(parm.name, parm.description,
                     formats = [{'mimeType':'text/html'}])
+            elif parm.__class__.__name__ == 'OutputFile':
+                if parm.ext == 'png':
+                    self._outputs['Output%s' % i] = self.addComplexOutput(parm.name, parm.description,
+                        formats = [{'mimeType':'image/png'}])
+                elif parm.ext in ['jpg', 'jpeg']:
+                    self._outputs['Output%s' % i] = self.addComplexOutput(parm.name, parm.description,
+                        formats = [{'mimeType':'image/jpeg'}])
+                elif parm.ext in ['pdf', 'json', 'zip']:
+                    self._outputs['Output%s' % i] = self.addComplexOutput(parm.name, parm.description,
+                        formats = [{'mimeType':'application/'+parm.ext}])
+                elif parm.ext in ['txt', 'text']:
+                    self._outputs['Output%s' % i] = self.addComplexOutput(parm.name, parm.description,
+                        formats = [{'mimeType':'text/plain'}])
+                elif parm.ext in ['xml', 'html', 'csv']:
+                    self._outputs['Output%s' % i] = self.addComplexOutput(parm.name, parm.description,
+                        formats = [{'mimeType':'text/'+parm.ext}])
+                else:
+                    self._outputs['Output%s' % i] = self.addComplexOutput(parm.name, parm.description,
+                        formats = [{'mimeType':'application/octet-stream'}])
             elif parm.__class__.__name__ == 'OutputExtent':
                 self._outputs['Output%s' % i] = self.addBBoxOutput(parm.name, parm.description)
             else:
