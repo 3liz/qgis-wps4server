@@ -10,7 +10,7 @@
 name=wps4server
 qgisMinimumVersion=2.8
 description=OGC Web Processing Service for QGIS Server
-version=1.0.2
+version=1.0.3
 author=DHONT René-Luc (3Liz)
 email=rldhont@3liz.com
 ; if True it's a server plugin
