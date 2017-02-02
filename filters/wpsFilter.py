@@ -38,6 +38,15 @@ from processing.core.Processing import Processing
 from processing.core.ProcessingConfig import ProcessingConfig, Setting
 from processing.core.parameters import *
 from processing.tools.general import *
+from processing.gui.SilentProgress import SilentProgress
+
+class QGISProgress(SilentProgress):
+
+    def __init__(self, algname=None):
+        self.msg = []
+
+    def error(self, msg):
+        self.msg.append(msg)
 
 def QGISProcessFactory(alg_name, project='', vectors=[], rasters=[], crss=[]):
     """This is the bridge between SEXTANTE and PyWPS:
@@ -427,10 +436,13 @@ def QGISProcessFactory(alg_name, project='', vectors=[], rasters=[], crss=[]):
         if not len( self.alg.parameters ):
             self.alg.defineCharacteristics()
 
-        tAlg = Processing.runAlgorithm(self.alg, None, args)
+        progress = QGISProgress()
+        tAlg = Processing.runAlgorithm(self.alg, None, args, progress=progress)
         # if runalg failed return exception message
         if not tAlg:
             return 'Error in processing'
+        if len(progress.msg):
+            return ', '.join(progress.msg)
         # clear map layer registry
         mlr.removeAllMapLayers()
         # get result
