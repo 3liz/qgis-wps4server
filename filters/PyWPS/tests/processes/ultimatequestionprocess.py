@@ -12,29 +12,30 @@ Done by Jorge de Jesus (jmdj@pml.ac.uk) as suggested by Kor de Jong
 
 """
 
-from pywps.Process import WPSProcess                               
-class Process(WPSProcess):
-     def __init__(self):
-         # init process
-         WPSProcess.__init__(self,
-                             identifier="ultimatequestionprocess", #the same as the file name
-                             title="Answer to Life, the Universe and Everything",
-                             version = "2.0",
-                             storeSupported = True,
-                             statusSupported = True,
-                            abstract="Numerical solution that is the answer to Life, Universe and Everything. The process is an improvement to Deep Tought computer (therefore version 2.0) since it no longer takes 7.5 milion years, but only a few seconds to give a response, with an update of status every 10 seconds.",
-                            grassLocation =False)
-            #No need for inputs since Execute will start the process
-         self.Answer=self.addLiteralOutput(identifier = "answer",
-                                            title = "The numerical answer to Life, Universe and Everything")
+from pywps.Process import WPSProcess
 
-                                           
-     def execute(self):
-         import time
-         self.status.set("Preparing....", 0)
-         for i in xrange(1, 11):
-             time.sleep(2)
-             self.status.set("Thinking.....", i*10) 
-         #The final answer    
-         self.Answer.setValue("42")
-        
+
+class Process(WPSProcess):
+
+    def __init__(self):
+        # init process
+        WPSProcess.__init__(self,
+                            identifier="ultimatequestionprocess",  # the same as the file name
+                            title="Answer to Life, the Universe and Everything",
+                            version="2.0",
+                            storeSupported=True,
+                            statusSupported=True,
+                            abstract="Numerical solution that is the answer to Life, Universe and Everything. The process is an improvement to Deep Tought computer (therefore version 2.0) since it no longer takes 7.5 milion years, but only a few seconds to give a response, with an update of status every 10 seconds.",
+                            grassLocation=False)
+        # No need for inputs since Execute will start the process
+        self.Answer = self.addLiteralOutput(identifier="answer",
+                                            title="The numerical answer to Life, Universe and Everything")
+
+    def execute(self):
+        import time
+        self.status.set("Preparing....", 0)
+        for i in xrange(1, 11):
+            time.sleep(2)
+            self.status.set("Thinking.....", i * 10)
+        # The final answer
+        self.Answer.setValue("42")

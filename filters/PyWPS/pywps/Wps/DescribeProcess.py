@@ -18,13 +18,17 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+# 02110-1301  USA
 
 from pywps.Wps import Request
 from pywps import config
 from pywps.Template import TemplateError
-import os,types,traceback
+import os
+import types
+import traceback
 import logging
+
 
 class DescribeProcess(Request):
     """
@@ -32,27 +36,27 @@ class DescribeProcess(Request):
     file.
     """
 
-    def __init__(self,wps,processes=None):
+    def __init__(self, wps, processes=None):
         """
         Arguments:
            self
            wps   - parent WPS instance
         """
-        Request.__init__(self,wps,processes)
+        Request.__init__(self, wps, processes)
 
         #
         # HEAD
         #
         self.templateProcessor.set("encoding",
-                                    config.getConfigValue("wps","encoding"))
+                                   config.getConfigValue("wps", "encoding"))
         self.templateProcessor.set("lang",
-                                    self.wps.inputs["language"])
+                                   self.wps.inputs["language"])
 
         #
         # Processes
         #
 
-        self.templateProcessor.set("Processes",self.processesDescription())
+        self.templateProcessor.set("Processes", self.processesDescription())
         self.response = self.templateProcessor.__str__()
 
         return
@@ -79,12 +83,12 @@ class DescribeProcess(Request):
             if process.metadata:
                 processData["Metadata"] = self.formatMetadata(process)
             if process.profile:
-                profiles=[]
+                profiles = []
                 if type(process.profile) == types.ListType:
                     for profile in process.profile:
-                        profiles.append({"profile":profile})
+                        profiles.append({"profile": profile})
                 else:
-                    profiles.append({"profile":process.profile})
+                    profiles.append({"profile": process.profile})
                 processData["Profiles"] = profiles
             if process.wsdl:
                 processData["wsdl"] = process.wsdl
@@ -107,23 +111,23 @@ class DescribeProcess(Request):
             processesData.append(processData)
         return processesData
 
-    def processInputs(self,process):
+    def processInputs(self, process):
         """Format process inputs block
 
         :return: dictionary, which is to be used for
             :func:`pywps.Template.TemplateProcessor.set`
         """
-        
+
         processInputs = []
         for identifier in process.inputs:
             processInput = {}
             input = process.inputs[identifier]
             processInput["identifier"] = identifier
-            processInput["title"] =  process.i18n(input.title)
+            processInput["title"] = process.i18n(input.title)
             processInput["abstract"] = process.i18n(input.abstract)
             processInput["minoccurs"] = input.minOccurs
             if input.metadata:
-                processInput["metadata"]=input.metadata
+                processInput["metadata"] = input.metadata
             try:
                 if input.default:
                     processInput["minoccurs"] = 0
@@ -132,17 +136,17 @@ class DescribeProcess(Request):
             processInput["maxoccurs"] = input.maxOccurs
             if input.type == "LiteralValue":
                 processInput["literalvalue"] = 1
-                self.literalValue(input,processInput)
+                self.literalValue(input, processInput)
             if input.type == "ComplexValue":
                 processInput["complexvalue"] = 1
-                self.complexValue(input,processInput)
+                self.complexValue(input, processInput)
             if input.type == "BoundingBoxValue":
                 processInput["boundingboxvalue"] = 1
-                self.bboxValue(input,processInput)
+                self.bboxValue(input, processInput)
             processInputs.append(processInput)
         return processInputs
 
-    def processOutputs(self,process):
+    def processOutputs(self, process):
         """Format process outputs block
 
         :return: dictionary, which is to be used for
@@ -154,23 +158,23 @@ class DescribeProcess(Request):
             processOutput = {}
             output = process.outputs[identifier]
             processOutput["identifier"] = identifier
-            processOutput["title"] =     process.i18n(output.title)
-            processOutput["abstract"] =  process.i18n(output.abstract)
+            processOutput["title"] = process.i18n(output.title)
+            processOutput["abstract"] = process.i18n(output.abstract)
             if output.metadata:
-                processOutput["metadata"]=output.metadata
+                processOutput["metadata"] = output.metadata
             if output.type == "LiteralValue":
                 processOutput["literalvalue"] = 1
-                self.literalValue(output,processOutput)
+                self.literalValue(output, processOutput)
             if output.type == "ComplexValue":
                 processOutput["complexvalue"] = 1
-                self.complexValue(output,processOutput)
+                self.complexValue(output, processOutput)
             if output.type == "BoundingBoxValue":
                 processOutput["boundingboxvalue"] = 1
-                self.bboxValue(output,processOutput)
+                self.bboxValue(output, processOutput)
             processOutputs.append(processOutput)
         return processOutputs
 
-    def literalValue(self,inoutput,processInOutput):
+    def literalValue(self, inoutput, processInOutput):
         """Format literal value attributes
 
         :param inoutput: :class:`pywps.Process.InAndOutputs.Input` or 
@@ -193,15 +197,15 @@ class DescribeProcess(Request):
         if len(inoutput.uoms) > 0:
             supportedUOMS = []
             for uom in inoutput.uoms:
-                supportedUOMS.append({"uom":uom})
+                supportedUOMS.append({"uom": uom})
             processInOutput["supportedUOMS"] = supportedUOMS
             processInOutput["UOM"] = 1
 
         # default values
-        if type(inoutput.default)!=type(None):
+        if type(inoutput.default) != type(None):
             processInOutput["isDefaultValue"] = 1
             processInOutput["defaultValue"] = inoutput.default
-            
+
         # allowed values
         # NOTE: only for inputs, but does not matter
         try:
@@ -227,7 +231,7 @@ class DescribeProcess(Request):
 
         return
 
-    def complexValue(self,inoutput,processInOutput):
+    def complexValue(self, inoutput, processInOutput):
         """Format complex value attributes, it also changes None format to application/x-empty
 
         :param inoutput: :class:`pywps.Process.InAndOutputs.Input` or 
@@ -244,21 +248,23 @@ class DescribeProcess(Request):
         processInOutput["Formats"] = []
         for format in inoutput.formats:
             processInOutput["Formats"].append({
-                                        "mimetype":format["mimeType"],
-                                        "encoding":format["encoding"],
-                                        "schema":format["schema"]
-                                            })
-        #Check for None values, that are replaces by application/x-empty
+                "mimetype": format["mimeType"],
+                "encoding": format["encoding"],
+                "schema": format["schema"]
+            })
+        # Check for None values, that are replaces by application/x-empty
         if processInOutput["mimetype"] is None:
-            processInOutput["mimetype"]="application/x-empty"
-        
-        #Jmdj: format["mimetype"] is None --> FILTER ; for format in processInOutput["Formats"] --> INTERACTOR
-        #format.__setitem__("mimetype","application/x-empty") --> SETTING KEY,VALUE (it cant'be format["mimetype"]="foo")
-        [format.__setitem__("mimetype","application/x-empty") for format in processInOutput["Formats"] if format["mimetype"] is None]
-        
+            processInOutput["mimetype"] = "application/x-empty"
+
+        # Jmdj: format["mimetype"] is None --> FILTER ; for format in processInOutput["Formats"] --> INTERACTOR
+        # format.__setitem__("mimetype","application/x-empty") --> SETTING
+        # KEY,VALUE (it cant'be format["mimetype"]="foo")
+        [format.__setitem__("mimetype", "application/x-empty")
+         for format in processInOutput["Formats"] if format["mimetype"] is None]
+
         return
 
-    def bboxValue(self,input,processInput):
+    def bboxValue(self, input, processInput):
         """Format bboxValue value attributes
 
         :param inoutput: :class:`pywps.Process.InAndOutputs.Input` or 
@@ -271,8 +277,6 @@ class DescribeProcess(Request):
 
         processInput["CRSs"] = []
         for crs in input.crss:
-            processInput["CRSs"].append({"crs":crs})
+            processInput["CRSs"].append({"crs": crs})
 
         return
-
-

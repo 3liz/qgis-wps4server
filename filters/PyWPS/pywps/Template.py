@@ -26,7 +26,8 @@ PyWPS Templating system
 #
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+# 02110-1301  USA
 
 import os
 import re
@@ -38,10 +39,11 @@ TMPLEXT = "tmpl"
 TMPLCEXT = "tmplc"
 INCDIR = "inc"
 PREF = "TMPL"
-VARTYPES=[types.StringType, types.FileType,
-        types.FloatType, types.IntType,
-        types.NoneType,
-        types.BooleanType, types.LongType, types.UnicodeType]
+VARTYPES = [types.StringType, types.FileType,
+            types.FloatType, types.IntType,
+            types.NoneType,
+            types.BooleanType, types.LongType, types.UnicodeType]
+
 
 class Token:
     """Base Token class. Token is snipplet of input template. Template
@@ -58,18 +60,18 @@ class Token:
     ifOrElseChild = "if"
     closing = False
 
-    def __init__(self,type=None):
+    def __init__(self, type=None):
         """Constructor of the Token.
 
         :param type: Initial type of the object
         :type type: string
         """
 
-        self._childs = [] # initialize empty list of childs
+        self._childs = []  # initialize empty list of childs
         if type == "loop":
             self.value = []  # loop tokens do need special handeling
-        elif type =="if":
-            self.value = False # if tokens do need special handeling
+        elif type == "if":
+            self.value = False  # if tokens do need special handeling
         else:
             self.value = ""
 
@@ -115,11 +117,11 @@ class Token:
         :rtype: string
         """
         if self.value == None:
-            raise TemplateError("Token's value not set [%s %s, parent: %s] " % \
-                    (self.statement,[self], [self.parent]))
+            raise TemplateError("Token's value not set [%s %s, parent: %s] " %
+                                (self.statement, [self], [self.parent]))
         return self._printAsValue()
 
-    def setValue(self,value):
+    def setValue(self, value):
         """Set value for this token
 
         :param value: any text or attribute, which will be assigned as
@@ -130,6 +132,7 @@ class Token:
         if value == None:
             value = str(value)
         self.value = value
+
 
 class IfToken(Token):
     """Special token used for IF/ELSE constructions. This token contains
@@ -179,7 +182,7 @@ class IfToken(Token):
                 val += child.__str__()
         return val
 
-    def setValue(self,value):
+    def setValue(self, value):
 
         self.value = not not value
         # set the value for childs as well, because self.name can be the
@@ -198,7 +201,7 @@ class LoopToken(Token):
     """
     type = 'loop'
 
-    def __init__(self,*args):
+    def __init__(self, *args):
         Token.__init__(self, args)
         self.value = []
 
@@ -226,6 +229,7 @@ class LoopToken(Token):
                 child.setParent(self)
         self.parent = parent
 
+
 class VarToken(Token):
     """Token used for VAR constructions"""
     type = 'var'
@@ -238,6 +242,7 @@ class VarToken(Token):
             return str(self.value)
         elif self.parent.value != None:
             return str(self.value)
+
 
 class TemplateProcessor:
     """Processor of the template class. This class is used for
@@ -253,7 +258,7 @@ class TemplateProcessor:
     template = None
     _vars = {}
 
-    def __init__(self, fileName = None, compile=True):
+    def __init__(self, fileName=None, compile=True):
         """Class constructor
 
         :param fileName: file name of the template
@@ -277,7 +282,7 @@ class TemplateProcessor:
     def readFromCompiled(self):
         """Set self.tokens from existing compiled file
         """
-        self.tokens =  cPickle.load(open(self._cfile,"rb"))
+        self.tokens = cPickle.load(open(self._cfile, "rb"))
 
     def recompile(self):
         """Set self.tokens from input text file and store them in compiled
@@ -285,14 +290,15 @@ class TemplateProcessor:
         """
 
         # parse input data
-        self.tokens  = self.tokenize(open(self._file,"r").read())
+        self.tokens = self.tokenize(open(self._file, "r").read())
 
         # store to binary form
         if self._compile:
             try:
-                cPickle.dump(self.tokens, open(self._cfile,"w"), True)
-            except Exception,e:
-                raise TemplateError("Could not store file in compiled form: %s. Try to set permission for this directory to 777" % e)
+                cPickle.dump(self.tokens, open(self._cfile, "w"), True)
+            except Exception, e:
+                raise TemplateError(
+                    "Could not store file in compiled form: %s. Try to set permission for this directory to 777" % e)
 
     def tokenize(self, templateData):
         """Tokenize input text data.
@@ -310,7 +316,7 @@ class TemplateProcessor:
              [ a-zA-Z0-9""/.=:_\\-]*   # statement content, to final >
              >)
             [%s]?                      # eat trailing newline (opt.)
-        """ % (PREF,os.linesep)
+        """ % (PREF, os.linesep)
         regex = re.compile(pattern, re.VERBOSE | re.MULTILINE)
 
         # list of tokens
@@ -362,7 +368,7 @@ class TemplateProcessor:
             # if the token is opened one, like IF or LOOP, add the token to
             # tokens stack
             if type(token) == types.InstanceType and\
-                not token.closed:
+                    not token.closed:
                 stack.append(token)
 
         # handle error: some opened token was not closed, the template
@@ -370,12 +376,14 @@ class TemplateProcessor:
         if len(stack):
             tokenNames = ""
             for token in stack:
-                tokenNames += "type: %s, name: %s; " % (token.type.upper(), token.name)
-            raise TemplateError("Statement(s) [%s] not closed! The document is noto well formated."% tokenNames)
+                tokenNames += "type: %s, name: %s; " % (
+                    token.type.upper(), token.name)
+            raise TemplateError(
+                "Statement(s) [%s] not closed! The document is noto well formated." % tokenNames)
 
         return tokens
 
-    def getToken(self,statement):
+    def getToken(self, statement):
         """Create new token object, based on input text statement
 
         :param statement: some statement from the template
@@ -385,8 +393,8 @@ class TemplateProcessor:
 
         # the statement does start on something like "<TMPL_", this needs
         # special care
-        if statement.startswith("<"+PREF) or \
-           statement.startswith("</"+PREF):
+        if statement.startswith("<" + PREF) or \
+           statement.startswith("</" + PREF):
 
             # remove <> from the statement
             statement = self._debracketize(statement)
@@ -395,19 +403,19 @@ class TemplateProcessor:
             params = re.split(r"\s+", statement)
 
             # get desired class and type name
-            (tokenType,typeName) = self._getTokenType(params)
+            (tokenType, typeName) = self._getTokenType(params)
 
             # create new instance of desired token, set type, name, value
             # (if any), closed attribute and statement attribute
             token = tokenType()
             token.type = typeName
             token.name = self._getTokenName(params)
-            token.setValue(self._getTokenValue(token.type,params))
-            token.closed = self._getTokenClosed(token.type,statement)
+            token.setValue(self._getTokenValue(token.type, params))
+            token.closed = self._getTokenClosed(token.type, statement)
 
             # if this token starts on something like </TMPL_, it must be
             # closing something
-            if statement.startswith("/"+PREF):
+            if statement.startswith("/" + PREF):
                 token.closing = True
         else:
             # create some normal text token otherwise
@@ -427,7 +435,7 @@ class TemplateProcessor:
 
         # use our tokenize method for this work
         tokens = self.tokenize(
-                open(os.path.join(templateDir,INCDIR,token.value),"r").read())
+            open(os.path.join(templateDir, INCDIR, token.value), "r").read())
         return tokens
 
     def _getLastIfToken(self, tokens):
@@ -438,11 +446,10 @@ class TemplateProcessor:
 
         # find the index of last IF token
         lastIfToken = None
-        for (i,token) in enumerate(tokens):
+        for (i, token) in enumerate(tokens):
             if token.type == "if":
                 lastIfToken = i
         return tokens[i]
-
 
     def _debracketize(self, statement):
         """Remove starting and final <> marks from the statement
@@ -452,13 +459,13 @@ class TemplateProcessor:
         """
 
         if statement.startswith("<"):
-            statement=statement.replace("<","")
+            statement = statement.replace("<", "")
         if statement.endswith(">"):
-            statement=statement.replace(">","")
+            statement = statement.replace(">", "")
 
         return statement
 
-    def _getTokenName(self,params):
+    def _getTokenName(self, params):
         """Get name of the token based on it's parameters
 
         :param params: list of statement parameters
@@ -468,11 +475,11 @@ class TemplateProcessor:
 
         # name is the first parameter, if any
         if len(params) > 1:
-            return params[1].replace("/","")
+            return params[1].replace("/", "")
         else:
             return None
 
-    def _getTokenType(self,params):
+    def _getTokenType(self, params):
         """Get type of the token based on it's parameters and coresponding
         class
 
@@ -482,17 +489,17 @@ class TemplateProcessor:
         :rtype: (:class:`Token`, string)
         """
 
-        type = params[0].replace(PREF+"_","").lower().replace("/","")
+        type = params[0].replace(PREF + "_", "").lower().replace("/", "")
         if type == "loop":
-            return (LoopToken,type)
+            return (LoopToken, type)
         elif type == "var":
-            return (VarToken,type)
+            return (VarToken, type)
         elif type == "if":
-            return (IfToken,type)
+            return (IfToken, type)
         else:
-            return (Token,type)
+            return (Token, type)
 
-    def _getTokenValue(self,type,params):
+    def _getTokenValue(self, type, params):
         """Some tokens might already have initial value -- usualy 'normal'
         text tokens the text
 
@@ -501,7 +508,7 @@ class TemplateProcessor:
         """
 
         if type == "include":
-            return params[1].replace("/","")
+            return params[1].replace("/", "")
         elif type == "if":
             return False
         elif type == "loop":
@@ -509,7 +516,7 @@ class TemplateProcessor:
         else:
             return None
 
-    def _getTokenClosed(self,type,statement):
+    def _getTokenClosed(self, type, statement):
         """Control, if the statement is closed
 
         :param type: type of the token
@@ -519,11 +526,11 @@ class TemplateProcessor:
         :return: token is closed or not
         """
         if statement.endswith("/") or \
-            statement.startswith("/") or \
-            type == "var" or \
-            type == "include" or \
-            type == "else" or \
-            type == None:
+                statement.startswith("/") or \
+                type == "var" or \
+                type == "include" or \
+                type == "else" or \
+                type == None:
             return True
         else:
             return False
@@ -534,8 +541,8 @@ class TemplateProcessor:
         :rtype: boolean
         """
         (self.templateDir, fileName) = os.path.split(self._file)
-        compiledFileName = fileName.replace(TMPLEXT,TMPLCEXT)
-        self._cfile = os.path.join(self.templateDir,compiledFileName)
+        compiledFileName = fileName.replace(TMPLEXT, TMPLCEXT)
+        self._cfile = os.path.join(self.templateDir, compiledFileName)
         return os.path.isfile(self._cfile)
 
     def isUpToDate(self):
@@ -555,7 +562,6 @@ class TemplateProcessor:
             # there is no source file -> always upToDate
             return True
 
-
     def __str__(self):
         """Format this template to text form"""
 
@@ -566,7 +572,7 @@ class TemplateProcessor:
             str += token.__str__()
         return str
 
-    def _setVarValue(self,key,value,tokens,parent=None):
+    def _setVarValue(self, key, value, tokens, parent=None):
         """Set value of the VAR (or IF) type of token
 
         :param key: key identificator
@@ -593,29 +599,30 @@ class TemplateProcessor:
             # if token.name == key and parent.name are the same, this is
             # the one
             if token.name == key and\
-                tParent == pName:
+                    tParent == pName:
 
                 # now, we are setting the VAR value, the type has to
                 # correspond. But since IF childs must be on the same
                 # level, as IF token, we have to take this into account as
                 # well
-                if token.type in ("var" , "if"):
+                if token.type in ("var", "if"):
                     token.setValue(value)
                 else:
-                    raise TemplateError("Token <%s> is not of type VAR"%(token.statement))
+                    raise TemplateError(
+                        "Token <%s> is not of type VAR" % (token.statement))
 
             # as already metioned, childs of IF token must appear to be on
             # the same level, as IF token, so try to find the corresponding
             # child
             if token.type == "if":
-                self.set(key,value,token._childs)
+                self.set(key, value, token._childs)
                 for child in token._childs:
                     if child.name == key:
                         child.setValue(value)
 
         return tokens
 
-    def _setLoopValue(self,key,values,tokens):
+    def _setLoopValue(self, key, values, tokens):
         """Set value of the loop token
 
         :param key: key identificator
@@ -632,11 +639,11 @@ class TemplateProcessor:
             # it can happen, that there is some IF token as well, we set
             # the value of their child as well
             if token.type == "if" and \
-                token.name == key:
-                    token.setValue(values)
+                    token.name == key:
+                token.setValue(values)
 
             if token.type == "if":
-                self.set(key,values,token._childs)
+                self.set(key, values, token._childs)
 
             # we found the right one  token
             if token.type == "loop" and token.name == key:
@@ -651,7 +658,8 @@ class TemplateProcessor:
                 for value in values:
                     appendChilds = copy.deepcopy(token._childs[:])
                     for name in value:
-                        appendChilds = self.set(name,value[name],appendChilds,token)
+                        appendChilds = self.set(
+                            name, value[name], appendChilds, token)
                     newValues.append(appendChilds)
 
                 token.setValue(newValues)
@@ -659,7 +667,7 @@ class TemplateProcessor:
 
         return tokens
 
-    def set(self,key,value,tokens = None, parent=None):
+    def set(self, key, value, tokens=None, parent=None):
         """Set value of some token
 
         :param key: key identificator
@@ -678,14 +686,14 @@ class TemplateProcessor:
 
         # consider, if we are supposed to set normal token or LOOP token
         if type(value) in VARTYPES:
-            return self._setVarValue(key,value,tokens,parent)
+            return self._setVarValue(key, value, tokens, parent)
         elif type(value) == type([]):
-            return self._setLoopValue(key,value,tokens)
+            return self._setLoopValue(key, value, tokens)
         else:
-            raise TemplateError("Unknown data type %s of '%s'"%\
-                    (type(value), value))
+            raise TemplateError("Unknown data type %s of '%s'" %
+                                (type(value), value))
 
-    def _printTokens(self,tokens = None,indent = 0):
+    def _printTokens(self, tokens=None, indent=0):
         """Print 'dom' like representation of tokens
         """
         # start from the root, if no tokens are given
@@ -695,9 +703,10 @@ class TemplateProcessor:
         # for each token, print is representation, name and value with
         # proper indentation and call this method for it's childs as well
         for t in tokens:
-            print "\t"*indent,[t], t.name or t.value.strip()
+            print "\t" * indent, [t], t.name or t.value.strip()
             if t._childs:
-                self._printTokens(t._childs, indent+1)
+                self._printTokens(t._childs, indent + 1)
+
 
 class TemplateError(Exception):
     """General template exception"""

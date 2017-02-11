@@ -31,9 +31,11 @@ In the process:
 #
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+# 02110-1301  USA
 
 import os
+
 
 class Lang:
     """Lang class"""
@@ -43,33 +45,32 @@ class Lang:
     # taken from
     # http://www.loc.gov/standards/iso639-2/php/code_list.php
 
-   
     #  self.codes[0] =  RFC 4646
     # self.codes[1] = ISO 639-1
     # self.codes[2] = English name
-    
-    #Good code list RFC 4646:http://sharpertutorials.com/list-of-culture-codes/
-    #Note: Previous versions supported  # self.codes[0] = ISO 639-2
-    
+
+    # Good code list RFC 4646:http://sharpertutorials.com/list-of-culture-codes/
+    # Note: Previous versions supported  # self.codes[0] = ISO 639-2
+
     codes = [
-            ["en-CA","en","english"],
-            ["de-DE","de","german"],
-            ["fr-FR","fr","french"],
-            ["cz-CZ","cz","czech"],
-            ["it-IT","it","italian"],
-            ["gr-GR","el","greek"],
-            ["ca-ES","ca","catalan"],
-            ["es-ES","es","spanish"],
-            ["fi-FI","fi","finnish"],
-            ["sv-SE","sv","swedish"],
-            ["pt-PT","pt","portuguese"],
-            # to be continued ...
+            ["en-CA", "en", "english"],
+            ["de-DE", "de", "german"],
+            ["fr-FR", "fr", "french"],
+            ["cz-CZ", "cz", "czech"],
+            ["it-IT", "it", "italian"],
+            ["gr-GR", "el", "greek"],
+            ["ca-ES", "ca", "catalan"],
+            ["es-ES", "es", "spanish"],
+            ["fi-FI", "fi", "finnish"],
+            ["sv-SE", "sv", "swedish"],
+            ["pt-PT", "pt", "portuguese"],
+        # to be continued ...
     ]
-    defaultCode ="en-CA"
+    defaultCode = "en-CA"
 
     # static method
     def getCode(langString):
-       
+
         for lang in Lang.codes:
             if langString.lower() in [code.lower() for code in lang]:
                 return lang[0]
@@ -87,7 +88,7 @@ class Lang:
 
     def setCode(self, code):
         """ Set chosen language code """
-        
+
         self.code = Lang.getCode(code)
         if not self.code:
             self.code = self.defaultCode
@@ -107,12 +108,10 @@ class Lang:
             self.strings[lang[0]] = {}
         return
 
-    def get(self,key):
+    def get(self, key):
         """ Will return desired string in selected language """
-       
+
         if self.strings[self.code].has_key(key):
             return self.strings[self.code][key]
-        
 
         return key
-

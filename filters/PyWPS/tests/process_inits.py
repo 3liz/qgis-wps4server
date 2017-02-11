@@ -1,7 +1,8 @@
 import os
 import sys
 
-pywpsPath = os.path.abspath(os.path.join(os.path.split(os.path.abspath(__file__))[0],".."))
+pywpsPath = os.path.abspath(os.path.join(
+    os.path.split(os.path.abspath(__file__))[0], ".."))
 sys.path.append(pywpsPath)
 
 import pywps
@@ -9,6 +10,7 @@ import pywps.Process
 import unittest
 import os
 from xml.dom import minidom
+
 
 class RequestGetTestCase(unittest.TestCase):
     inputs = None
@@ -20,31 +22,37 @@ class RequestGetTestCase(unittest.TestCase):
     xmldom = None
 
     def setUp(self):
-        sys.stderr=open("/dev/null","w")
-        
+        sys.stderr = open("/dev/null", "w")
+
     def testLoadProcessesFromClass(self):
         """Test, if we can load process as classes"""
         class newClassProcess(pywps.Process.WPSProcess):
+
             def __init__(self):
-                pywps.Process.WPSProcess.__init__(self,identifier="foo", title="bar")
+                pywps.Process.WPSProcess.__init__(
+                    self, identifier="foo", title="bar")
 
         mypywps = pywps.Pywps(pywps.METHOD_GET)
         inputs = mypywps.parseRequest(self.getcapabilitiesrequest)
-        mypywps.performRequest(self.inputs,[newClassProcess])
+        mypywps.performRequest(self.inputs, [newClassProcess])
         xmldom = minidom.parseString(mypywps.response)
-        self.assertTrue(len(xmldom.getElementsByTagNameNS(self.wpsns,"Process"))>0)
+        self.assertTrue(
+            len(xmldom.getElementsByTagNameNS(self.wpsns, "Process")) > 0)
 
     def testLoadProcessesAsInstance(self):
         """Test, if we can load process as instances"""
         class newClassProcess(pywps.Process.WPSProcess):
+
             def __init__(self):
-                pywps.Process.WPSProcess.__init__(self,identifier="foo", title="bar")
+                pywps.Process.WPSProcess.__init__(
+                    self, identifier="foo", title="bar")
 
         mypywps = pywps.Pywps(pywps.METHOD_GET)
         inputs = mypywps.parseRequest(self.getcapabilitiesrequest)
-        mypywps.performRequest(self.inputs,[newClassProcess()])
+        mypywps.performRequest(self.inputs, [newClassProcess()])
         xmldom = minidom.parseString(mypywps.response)
-        self.assertTrue(len(xmldom.getElementsByTagNameNS(self.wpsns,"Process"))>0)
+        self.assertTrue(
+            len(xmldom.getElementsByTagNameNS(self.wpsns, "Process")) > 0)
 
     def testLoadProcessesFromEnvVar(self):
         """Test, if we can load processes set from PYWPS_PROCESSES
@@ -58,11 +66,13 @@ class RequestGetTestCase(unittest.TestCase):
         self.assertTrue(mypywps.request.getProcess("dummyprocess"))
 
     def _setFromEnv(self):
-        os.putenv("PYWPS_PROCESSES", os.path.join(pywpsPath,"tests","processes"))
-        os.environ["PYWPS_PROCESSES"] = os.path.join(pywpsPath,"tests","processes")
-        
+        os.putenv("PYWPS_PROCESSES", os.path.join(
+            pywpsPath, "tests", "processes"))
+        os.environ["PYWPS_PROCESSES"] = os.path.join(
+            pywpsPath, "tests", "processes")
+
 
 if __name__ == "__main__":
     # unittest.main()
-   suite = unittest.TestLoader().loadTestsFromTestCase(RequestGetTestCase)
-   unittest.TextTestRunner(verbosity=2).run(suite)
+    suite = unittest.TestLoader().loadTestsFromTestCase(RequestGetTestCase)
+    unittest.TextTestRunner(verbosity=2).run(suite)

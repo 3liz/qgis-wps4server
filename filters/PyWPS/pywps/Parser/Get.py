@@ -22,7 +22,8 @@ Get
 #
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+# 02110-1301  USA
 
 # references used in the comments of this source code:
 # OWS_1-1-0:
@@ -46,18 +47,18 @@ from pywps.Process.Lang import Lang
 
 class Get(Parser):
     """ Main Class for parsing HTTP GET request types """
-    unparsedInputs =  None    # temporary store for later validation
+    unparsedInputs = None    # temporary store for later validation
     requestParser = None
 
     GET_CAPABILITIES = "getcapabilities"
     DESCRIBE_PROCESS = "describeprocess"
     EXECUTE = "execute"
 
-    def __init__(self,wps):
-        Parser.__init__(self,wps)
+    def __init__(self, wps):
+        Parser.__init__(self, wps)
         self.unparsedInputs = {}
 
-    def parse(self,queryString):
+    def parse(self, queryString):
         """Parse given string with parameters given in KVP encoding
 
         :param queryString: string of parameters taken from URL in KVP encoding
@@ -67,7 +68,8 @@ class Get(Parser):
         key = None
         value = None
         keys = []
-        maxInputLength = int(pywps.config.getConfigValue("server","maxinputparamlength"))
+        maxInputLength = int(pywps.config.getConfigValue(
+            "server", "maxinputparamlength"))
         unquotedQueryString = urllib.unquote(queryString)
         serverEncoding = pywps.config.getConfigValue("wps", "encoding")
         decodedQueryString = unquotedQueryString.decode(serverEncoding)
@@ -85,18 +87,17 @@ class Get(Parser):
                     break
                 else:
                     try:
-                        key,value = split(feature,"=",maxsplit=1)
+                        key, value = split(feature, "=", maxsplit=1)
                     except:
-                        raise NoApplicableCode(\
-                                                    'Invalid Key-Value-Pair: "' + \
-                                                    str(feature) + '"')
+                        raise NoApplicableCode(
+                            'Invalid Key-Value-Pair: "' +
+                            str(feature) + '"')
                     if value.find("[") == 0:  # if value in brackets:
-                        value = value[1:-1]   #    delete brackets
-                    if len(value)>maxInputLength:
-                            raise FileSizeExceeded(key)
+                        value = value[1:-1]  # delete brackets
+                    if len(value) > maxInputLength:
+                        raise FileSizeExceeded(key)
                 keys.append(key)
                 self.unparsedInputs[key.lower()] = value[:maxInputLength]
-
 
         if not self.inputs.has_key("wsdl"):
             # check service name
@@ -106,8 +107,9 @@ class Get(Parser):
             self.checkRequestType()
 
             # parse the request
-            self.inputs = self.requestParser.parse(self.unparsedInputs, self.inputs)
-            
+            self.inputs = self.requestParser.parse(
+                self.unparsedInputs, self.inputs)
+
         if not self.inputs:
             raise MissingParameterValue("service")
         return self.inputs
@@ -126,26 +128,26 @@ class Get(Parser):
             self.requestParser = GetCapabilities.Get(self.wps)
             self.inputs["request"] = self.GET_CAPABILITIES
         elif self.unparsedInputs["request"].lower() ==\
-           self.DESCRIBE_PROCESS:
+                self.DESCRIBE_PROCESS:
             import DescribeProcess
             self.requestParser = DescribeProcess.Get(self.wps)
             self.inputs["request"] = self.DESCRIBE_PROCESS
         elif self.unparsedInputs["request"].lower() ==\
-           self.EXECUTE:
+                self.EXECUTE:
             import Execute
             self.requestParser = Execute.Get(self.wps)
             self.inputs["request"] = self.EXECUTE
         else:
             raise InvalidParameterValue("request")
 
-
     def checkService(self):
         """ Check mandatory service name parameter.  """
 
         # service name is mandatory for all requests (OWS_1-1-0 p.14 tab.3 +
-        # p.46 tab.26); service must be "WPS" (WPS_1-0-0 p.17 tab.13 + p.32 tab.39)
+        # p.46 tab.26); service must be "WPS" (WPS_1-0-0 p.17 tab.13 + p.32
+        # tab.39)
         if "service" in self.unparsedInputs:
-            value=self.unparsedInputs["service"].upper()
+            value = self.unparsedInputs["service"].upper()
             if value.lower() == "wsdl":
                 self.inputs["service"] = "wsdl"
             elif value.lower() != "wps":
@@ -160,7 +162,7 @@ class Get(Parser):
         """ Check optional language parameter.  """
 
         if "language" in self.unparsedInputs:
-            value=Lang.getCode(self.unparsedInputs["language"].lower())
+            value = Lang.getCode(self.unparsedInputs["language"].lower())
             if value not in self.wps.languages:
                 raise InvalidParameterValue("language")
             else:
@@ -172,10 +174,10 @@ class Get(Parser):
         """ Check mandatory version parameter.  """
 
         if "version" in self.unparsedInputs:
-            value=self.unparsedInputs["version"]
+            value = self.unparsedInputs["version"]
             if value not in self.wps.versions:
                 raise VersionNegotiationFailed(
-                    'The requested version "' + value + \
+                    'The requested version "' + value +
                     '" is not supported by this server.')
             else:
                 self.inputs["version"] = value

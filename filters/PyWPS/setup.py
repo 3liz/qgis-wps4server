@@ -16,71 +16,77 @@ import os
 import pywps
 from pywps.Template import TemplateProcessor
 
+
 def get_current_path():
     return os.path.abspath(os.path.dirname(__file__))
+
 
 def get_templates_path(base):
     return os.path.join(base, 'pywps', 'Templates')
 
+
 def compile_templates(base):
     versionDirs = ['1_0_0']
 
-    template_files = ['GetCapabilities', 'DescribeProcess','Execute']
+    template_files = ['GetCapabilities', 'DescribeProcess', 'Execute']
 
     for version in versionDirs:
         for template_file in template_files:
-            print "Compiling template "+template_file+" in "+base
-            template_file = os.path.join(base,version,template_file + '.tmpl')
-            template = TemplateProcessor(fileName=template_file,compile=True)
+            print "Compiling template " + template_file + " in " + base
+            template_file = os.path.join(
+                base, version, template_file + '.tmpl')
+            template = TemplateProcessor(fileName=template_file, compile=True)
 
 # First compile templates
-PYWPS_PATH=get_current_path()
-TEMPLATES_PATH=get_templates_path(PYWPS_PATH)
+PYWPS_PATH = get_current_path()
+TEMPLATES_PATH = get_templates_path(PYWPS_PATH)
 compile_templates(TEMPLATES_PATH)
 
 
 name = 'pywps'
 
-classifiers=[
-           'Development Status :: 5 - Production/Stable',
-          'Environment :: Web Environment',
-          'Intended Audience :: Developers',
-          'License :: OSI Approved :: GNU General Public License (GPL)',
-          'Operating System :: MacOS :: MacOS X',
-          'Operating System :: Microsoft :: Windows',
-          'Operating System :: POSIX',
-          'Programming Language :: Python',
-          'Topic :: Communications :: Email',
-          'Topic :: Office/Business',
-          'Topic :: Software Development :: Bug Tracking',
-          ]
+classifiers = [
+    'Development Status :: 5 - Production/Stable',
+    'Environment :: Web Environment',
+    'Intended Audience :: Developers',
+    'License :: OSI Approved :: GNU General Public License (GPL)',
+    'Operating System :: MacOS :: MacOS X',
+    'Operating System :: Microsoft :: Windows',
+    'Operating System :: POSIX',
+    'Programming Language :: Python',
+    'Topic :: Communications :: Email',
+    'Topic :: Office/Business',
+    'Topic :: Software Development :: Bug Tracking',
+]
 
 
 #from distutils.core import setup
 from setuptools import setup
-import sys,os,traceback
+import sys
+import os
+import traceback
 
 doclines = __doc__.split("\n")
 
 
-dist =  setup(
-        name = name,
-        version = '3.2.2',
-        maintainer="Jachym Cepicky",
-        maintainer_email = 'jachym.cepicky@gmail.com',
-        author = 'Jachym Cepicky',
-        author_email = 'jachym.cepicky@gmail.com',
-        url = 'http://pywps.wald.intevation.org',
-        license = "http://www.gnu.org/licenses/gpl.html",
-        download_url="http://pywps.wald.intevation.org",
-        description=doclines[0],
-        zip_safe=False,
-        platforms=["any"],
-        classifiers= classifiers,
-        long_description = "\n".join(doclines[1:]),
+dist = setup(
+    name=name,
+    version='3.2.2',
+    maintainer="Jachym Cepicky",
+    maintainer_email='jachym.cepicky@gmail.com',
+    author='Jachym Cepicky',
+    author_email='jachym.cepicky@gmail.com',
+    url='http://pywps.wald.intevation.org',
+    license="http://www.gnu.org/licenses/gpl.html",
+    download_url="http://pywps.wald.intevation.org",
+    description=doclines[0],
+    zip_safe=False,
+    platforms=["any"],
+    classifiers=classifiers,
+    long_description="\n".join(doclines[1:]),
 
-        packages = [
-            'pywps',
+    packages=[
+        'pywps',
             'pywps.Wps',
             'pywps.Wps.Execute',
             'pywps.XSLT',
@@ -89,24 +95,24 @@ dist =  setup(
             'pywps.processes',
             'pywps.Templates',
             'pywps.Templates.1_0_0',
-        ],
-        package_dir={
-                    'pywps':"pywps",
-                    'pywps.Wps':'pywps/Wps',
-                    'pywps.Wps.Execute':'pywps/Wps/Execute',
-                    'pywps.XSLT':'pywps/XSLT',
-                    'pywps.Parser':'pywps/Parser',
-                    'pywps.Process':'pywps/Process',
-                    'pywps.Templates':'pywps/Templates',
-                    'pywps.Templates.1_0_0':'pywps/Templates/1_0_0',
-                    'pywps.Templates.1_0_0.inc':'pywps/Templates/1_0_0/inc',
-                },
-        package_data={
-                    'pywps':
-                    ['Templates/1_0_0/*.tmplc',
-                     'XSLT/*.xsl',
-                     'processes/*.py-dist','processes/README',
-                     'default.cfg']
-                },
-        scripts=['wps.py']
+    ],
+    package_dir={
+        'pywps': "pywps",
+        'pywps.Wps': 'pywps/Wps',
+        'pywps.Wps.Execute': 'pywps/Wps/Execute',
+        'pywps.XSLT': 'pywps/XSLT',
+        'pywps.Parser': 'pywps/Parser',
+        'pywps.Process': 'pywps/Process',
+        'pywps.Templates': 'pywps/Templates',
+        'pywps.Templates.1_0_0': 'pywps/Templates/1_0_0',
+        'pywps.Templates.1_0_0.inc': 'pywps/Templates/1_0_0/inc',
+    },
+    package_data={
+        'pywps':
+        ['Templates/1_0_0/*.tmplc',
+         'XSLT/*.xsl',
+         'processes/*.py-dist', 'processes/README',
+         'default.cfg']
+    },
+    scripts=['wps.py']
 )

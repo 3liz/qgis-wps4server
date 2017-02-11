@@ -33,7 +33,8 @@ server configuration file::
 #
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+# 02110-1301  USA
 
 from mod_python import apache
 import pywps
@@ -44,6 +45,7 @@ import os
 
 #from pywps.Exceptions import *
 
+
 def handler(req):
 
     inputQuery = None
@@ -53,8 +55,8 @@ def handler(req):
         inputQuery = req
 
     if not inputQuery:
-        err =  NoApplicableCode("No query string found.")
-        pywps.response.response(err,req)
+        err = NoApplicableCode("No query string found.")
+        pywps.response.response(err, req)
         return apache.OK
 
     # set PYWPS_CFG and PYWPS_PROCESSES environment variable, which can not
@@ -72,12 +74,12 @@ def handler(req):
             pywps.debug(wps.inputs)
             wps.performRequest()
             pywps.response.response(wps.response, req,
-                    wps.parser.isSoap, self.wps.parser.isSoapExecute,contentType = wps.request.contentType)
+                                    wps.parser.isSoap, self.wps.parser.isSoapExecute, contentType=wps.request.contentType)
             return apache.OK
-    except WPSException,e:
-        pywps.response.response(e, req) 
+    except WPSException, e:
+        pywps.response.response(e, req)
         return apache.OK
     except Exception, e:
         req.content_type = "text/plain"
-        traceback.print_exc(file = req)
+        traceback.print_exc(file=req)
         return apache.OK

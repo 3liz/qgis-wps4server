@@ -148,8 +148,8 @@ The **qgis** section contains:
 * **algs** a list of processes to publish; for example *qgis:fixeddistancebuffer,qgis:delaunaytriangulation,qgis:concavehull*
 * **input_bbox_crss** a list of available input bounding box CRSs
 * **output_ows_crss** a list of available CRSs for Opengis Web Service output
-* **outputs_minetypes_vector** a list of available output mimeTypes for vector, this parameter is made for reducing the list and select the default one
-* **outputs_minetypes_raster** a list of available output mimeTypes for raster, this parameter is made for reducing the list and select the default one
+* **outputs_mimetypes_vector** a list of available output mimeTypes for vector, this parameter is made for reducing the list and select the default one
+* **outputs_mimetypes_raster** a list of available output mimeTypes for raster, this parameter is made for reducing the list and select the default one
 
 To use an other config file than the default one, you can use:
 * **CONFIG** parameter in the URL

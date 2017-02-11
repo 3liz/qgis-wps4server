@@ -1,7 +1,8 @@
 import os
 import sys
 
-pywpsPath = os.path.abspath(os.path.join(os.path.split(os.path.abspath(__file__))[0],".."))
+pywpsPath = os.path.abspath(os.path.join(
+    os.path.split(os.path.abspath(__file__))[0], ".."))
 sys.path.append(pywpsPath)
 
 import pywps
@@ -12,6 +13,7 @@ import base64
 from osgeo import ogr
 import tempfile
 
+
 class ProcessesTestCase(unittest.TestCase):
     inputs = None
     getcapabilitiesrequest = "service=wps&request=getcapabilities"
@@ -19,26 +21,31 @@ class ProcessesTestCase(unittest.TestCase):
     xmldom = None
 
     def test01PYWPS_CFG(self):
-        os.environ["PYWPS_CFG"] = os.path.abspath(os.path.join(pywpsPath,"tests","pywps.cfg"))
+        os.environ["PYWPS_CFG"] = os.path.abspath(
+            os.path.join(pywpsPath, "tests", "pywps.cfg"))
         mypywps = pywps.Pywps(pywps.METHOD_GET)
         inputs = mypywps.parseRequest(self.getcapabilitiesrequest)
         mypywps.performRequest(inputs)
         xmldom = minidom.parseString(mypywps.response)
 
-        self.assertEquals(xmldom.getElementsByTagName("ows:Title")[0].firstChild.nodeValue, "Test")
+        self.assertEquals(xmldom.getElementsByTagName(
+            "ows:Title")[0].firstChild.nodeValue, "Test")
 
     def test02PYWPS_PROCESSES(self):
-        os.environ["PYWPS_PROCESSES"] = os.path.join(pywpsPath,"tests","processes")
+        os.environ["PYWPS_PROCESSES"] = os.path.join(
+            pywpsPath, "tests", "processes")
         mypywps = pywps.Pywps(pywps.METHOD_GET)
         inputs = mypywps.parseRequest(self.getcapabilitiesrequest)
         mypywps.performRequest(inputs)
         xmldom = minidom.parseString(mypywps.response)
-        #print mypywps.response
+        # print mypywps.response
 
-        self.assertTrue(len(xmldom.getElementsByTagNameNS(self.wpsns,"Process"))>0)
+        self.assertTrue(
+            len(xmldom.getElementsByTagNameNS(self.wpsns, "Process")) > 0)
 
     def test03PYWPS_TEMPLATES(self):
-        os.environ["PYWPS_TEMPLATES"] = os.path.join(pywpsPath,"tests","Templates")
+        os.environ["PYWPS_TEMPLATES"] = os.path.join(
+            pywpsPath, "tests", "Templates")
         mypywps = pywps.Pywps(pywps.METHOD_GET)
         inputs = mypywps.parseRequest(self.getcapabilitiesrequest)
         mypywps.performRequest(inputs)
