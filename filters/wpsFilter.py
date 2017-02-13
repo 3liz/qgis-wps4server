@@ -930,8 +930,9 @@ class wpsFilter(QgsServerFilter):
                             if isinstance(resp, file):
                                 resp = resp.read()
                             request.appendBody(resp)
-                            QgsMessageLog.logMessage(
-                                "WPS Response:\n%s" % resp)
+                            # Debug output useful for development
+                            # QgsMessageLog.logMessage(
+                            #    "WPS Response:\n%s" % resp)
                         else:
                             QgsMessageLog.logMessage("No response")
                     except Exception as e:
