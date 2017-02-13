@@ -66,6 +66,24 @@ TEMPDIRPREFIX = "pywps-instance"
 # it as been applied to ALL references, just as precausion
 
 
+def getOutputUrl():
+    """Get the output URL from configuration, automatically add
+    domain and protocol from environment if the configured  outputUrl
+    starts with a slash:
+    for example, if the original WPS url is
+    https://wps.mydomain.com/cgi/qgis_mapserv.cgi
+    and outputUrl is "/wps/tmp",
+    the final outputUrl will be:
+    https://wps.mydomain.com/wps/tmp
+    """
+    outputUrl = config.getConfigValue("server", "outputUrl")
+    if outputUrl.find('/') == 0:
+        port = os.environ.get("SERVER_PORT")
+        return "http" + ('s' if os.environ.get('HTTPS') else '') + \
+               "://" + os.environ.get("HTTP_HOST") + \
+               outputUrl
+    return outputUrl
+
 class Execute(Request):
     """
     This class performs the Execute request of WPS specification and
@@ -153,7 +171,7 @@ class Execute(Request):
 
     .. attribute :: statusTime
 
-        current status time 
+        current status time
 
     .. attribute :: dirsToBeRemoved
 
@@ -1172,8 +1190,7 @@ class Execute(Request):
                 f = open(tmpFileName, "w")
                 f.write(str(output.value))
                 f.close()
-                templateOutput["reference"] = escape(config.getConfigValue(
-                    "server", "outputUrl") + "/" + os.path.basename(tmpFileName))
+                templateOutput["reference"] = escape(getOutputUrl() + "/" + os.path.basename(tmpFileName))
 
             # complex value
         else:
@@ -1203,7 +1220,7 @@ class Execute(Request):
                     config.getConfigValue("server", "outputPath") + "/" + outName)
             else:
                 templateOutput["reference"] = escape(
-                    config.getConfigValue("server", "outputUrl") + "/" + outName)
+                    getOutputUrl() + "/" + outName)
 
             output.value = outFile
 
@@ -1252,7 +1269,7 @@ class Execute(Request):
     if mimeType is not in the list defined by the user then it will log it as an error, no further action will be taken
     Mainly used by: _asReferenceOutput,_complexOutput,_lineageComplexOutput,_lineageComplexReference
     Note: checkMimeTypeIn will set the output's format from the first time, if the user doesnt define an outputmimetype,
-    we'll use the first one in the list (set by CheckMimeTypeIn), the mimeType will then be validate using ligmagic 
+    we'll use the first one in the list (set by CheckMimeTypeIn), the mimeType will then be validate using ligmagic
         """
         ######## TESTING CODE #############
         # mimeType=output.ms.file(output.value).split(';')[0]
@@ -1436,7 +1453,7 @@ class Execute(Request):
         return size
 
     def setRawData(self):
-        """Sets response and contentType 
+        """Sets response and contentType
         """
 
         output = self.process.outputs[self.rawDataOutput]

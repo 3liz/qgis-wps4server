@@ -39,6 +39,7 @@ from processing.core.Processing import Processing
 from processing.core.ProcessingConfig import ProcessingConfig, Setting
 from processing.core.parameters import *
 from processing.tools.general import *
+# Note: SilentProgress used to be GUI
 from processing.core.SilentProgress import SilentProgress
 
 
@@ -688,6 +689,9 @@ class wpsFilter(QgsServerFilter):
     def responseComplete(self):
         QgsMessageLog.logMessage("wpsFilter.responseComplete")
         request = self.serverInterface().requestHandler()
+        # Inject env vars from the server env to the WPS env
+        for k in ('SERVER_PORT', 'HTTPS', 'HTTP_HOST'):
+            os.environ[k] = self.serverInterface().getEnv(k)
         params = request.parameterMap()
         service = params.get('SERVICE', '')
         # pdb.set_trace()
