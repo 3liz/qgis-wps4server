@@ -182,7 +182,7 @@ class Pywps:
         # get settings
         config.loadConfiguration(configFiles)
         self.setLogFile()
-        self.UUID = uuid.uuid1().__str__()
+        self.UUID = uuid.uuid4().__str__()
 
         self.languages = config.getConfigValue("wps", "lang").split(",")
         DEFAULT_LANG = self.languages[0]

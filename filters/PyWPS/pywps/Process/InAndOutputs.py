@@ -446,7 +446,7 @@ class ComplexInput(Input):
         fout = None
         try:
             fout = open(outputName, 'wb')
-        except IOError, what:
+        except IOError as what:
             self.onProblem("NoApplicableCode",
                            "Could not open file for writing")
         # NOTE: the filesize should be already checked in pywps/Post.py,
@@ -466,14 +466,17 @@ class ComplexInput(Input):
             try:
                 f1 = open(fout.name + ".base64", "r")
                 f2 = open(fout.name, "w")
+                # Might fail with incorrect padding in some situations
                 base64.decode(f1, f2)
                 f1.close()
                 f2.close()
-            except:
+            except Exception as e:
+                import pdb; pdb.set_trace()
                 self.onProblem(
-                    "NoApplicableCode", "Could not convert text input to binary using base64 encoding.")
+                    "NoApplicableCode", "Could not convert text input to binary using base64 encoding. %s" % (e,))
             finally:
-                os.remove(fout.name + ".base64")
+                if os.path.exists(fout.name + ".base64"):
+                    os.remove(fout.name + ".base64")
         # Checking what is actu
         try:
             mimeTypeMagic = self.ms.file(fileName).split(';')[0]

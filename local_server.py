@@ -142,7 +142,7 @@ class Handler(BaseHTTPRequestHandler):
         post_body = self.rfile.read(content_len).decode()
         request = post_body[1:post_body.find(' ')]
         self.path = self.path + '&REQUEST_BODY=' + \
-            post_body.replace('&amp;', '') + '&REQUEST=' + request
+            post_body.replace('&amp;', '').replace('+', '%2B') + '&REQUEST=' + request
         return self.do_GET()
 
 
