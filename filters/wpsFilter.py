@@ -22,7 +22,7 @@ from qgis.core import *
 
 from PyQt4.QtCore import *
 
-import os
+import os, types
 import sys
 import re
 import traceback
@@ -155,10 +155,28 @@ def QGISProcessFactory(alg_name, project='', vectors=[], rasters=[], crss=[]):
                     self._inputs['Input%s' % i].values = values
                 else:
                     self._inputs['Input%s' % i] = self.addComplexInput(escape(parm.name),
-                                                                       escape(parm.description).replace(
-                                                                           '\\', ''),
-                                                                       parmDesc,
-                                                                       minOccurs=minOccurs, formats=[{'mimeType': 'text/xml'}])
+                                                    escape(parm.description).replace('\\',''),
+                                                    parmDesc,
+                                                    minOccurs=minOccurs,
+                                                    formats = [{
+                        'mimeType':'text/xml',
+                        'encoding': 'utf-8'
+                    },{
+                        'mimeType':'text/xml; subtype=gml/2.1.2',
+                        'encoding': 'utf-8'
+                    },{
+                        'mimeType':'text/xml; subtype=gml/3.1.1',
+                        'encoding': 'utf-8'
+                    },{
+                        'mimeType':'application/gml+xml',
+                        'encoding': 'utf-8'
+                    },{
+                        'mimeType':'application/gml+xml; version=2.1.2',
+                        'encoding': 'utf-8'
+                    },{
+                        'mimeType':'application/gml+xml; version=3.1.1',
+                        'encoding': 'utf-8'
+                    }])
 
             elif parm.__class__.__name__ == 'ParameterRaster':
                 if rasterLayers:
@@ -172,10 +190,73 @@ def QGISProcessFactory(alg_name, project='', vectors=[], rasters=[], crss=[]):
                                                           for l in rasterLayers]
                 else:
                     self._inputs['Input%s' % i] = self.addComplexInput(escape(parm.name),
-                                                                       escape(parm.description).replace(
-                                                                           '\\', ''),
-                                                                       parmDesc,
-                                                                       minOccurs=minOccurs, formats=[{'mimeType': 'image/tiff'}])
+                                                    escape(parm.description).replace('\\',''),
+                                                    parmDesc,
+                                                    minOccurs=minOccurs,
+                                                    formats = [{'mimeType':'image/tiff'}])
+
+            elif parm.__class__.__name__ == 'ParameterMultipleInput':
+                if parm.datatype == ParameterMultipleInput.TYPE_VECTOR_ANY or \
+                   parm.datatype == ParameterMultipleInput.TYPE_VECTOR_POINT or \
+                   parm.datatype == ParameterMultipleInput.TYPE_VECTOR_LINE or \
+                   parm.datatype == ParameterMultipleInput.TYPE_VECTOR_POLYGON:
+                    if vectorLayers :
+                        self._inputs['Input%s' % i] = self.addLiteralInput(escape(parm.name),
+                                                        escape(parm.description).replace('\\',''),
+                                                        parmDesc,
+                                                        minOccurs=minOccurs,
+                                                        maxOccurs=len(vectorLayers),
+                                                        type=types.StringType)
+                        if parm.datatype == ParameterMultipleInput.TYPE_VECTOR_ANY:
+                            self._inputs['Input%s' % i].values = [l['name'] for l in vectorLayers]
+                        elif parm.datatype == ParameterMultipleInput.TYPE_VECTOR_POINT:
+                            self._inputs['Input%s' % i].values = [l['name'] for l in vectorLayers if l['geometry'] == 'Point']
+                        elif parm.datatype == ParameterMultipleInput.TYPE_VECTOR_LINE:
+                            self._inputs['Input%s' % i].values = [l['name'] for l in vectorLayers if l['geometry'] == 'Line']
+                        elif parm.datatype == ParameterMultipleInput.TYPE_VECTOR_POLYGON:
+                            self._inputs['Input%s' % i].values = [l['name'] for l in vectorLayers if l['geometry'] == 'Polygon']
+                    else :
+                        self._inputs['Input%s' % i] = self.addComplexInput(escape(parm.name),
+                                                        escape(parm.description).replace('\\',''),
+                                                        parmDesc,
+                                                        minOccurs=minOccurs,
+                                                        maxOccurs=10,
+                                                        formats = [{
+                            'mimeType':'text/xml',
+                            'encoding': 'utf-8'
+                        },{
+                            'mimeType':'text/xml; subtype=gml/2.1.2',
+                            'encoding': 'utf-8'
+                        },{
+                            'mimeType':'text/xml; subtype=gml/3.1.1',
+                            'encoding': 'utf-8'
+                        },{
+                            'mimeType':'application/gml+xml',
+                            'encoding': 'utf-8'
+                        },{
+                            'mimeType':'application/gml+xml; version=2.1.2',
+                            'encoding': 'utf-8'
+                        },{
+                            'mimeType':'application/gml+xml; version=3.1.1',
+                            'encoding': 'utf-8'
+                        }])
+
+                elif parm.datatype == ParameterMultipleInput.TYPE_RASTER :
+                    if rasterLayers :
+                        self._inputs['Input%s' % i] = self.addLiteralInput(escape(parm.name),
+                                                        escape(parm.description).replace('\\',''),
+                                                        parmDesc,
+                                                        minOccurs=minOccurs,
+                                                        maxOccurs=len(rasterLayers),
+                                                        type=types.StringType)
+                        self._inputs['Input%s' % i].values = [l['name'] for l in rasterLayers]
+                    else :
+                        self._inputs['Input%s' % i] = self.addComplexInput(escape(parm.name),
+                                                        escape(parm.description).replace('\\',''),
+                                                        parmDesc,
+                                                        minOccurs=minOccurs,
+                                                        maxOccurs=10,
+                                                        formats = [{'mimeType':'image/tiff'}])
 
             elif parm.__class__.__name__ == 'ParameterTable':
                 self._inputs['Input%s' % i] = self.addComplexInput(escape(parm.name),
@@ -444,6 +525,80 @@ def QGISProcessFactory(alg_name, project='', vectors=[], rasters=[], crss=[]):
                     mlr.addMapLayer(layer, False)
                     args[v.identifier] = layer
                     inputCrs = layer.crs()
+
+            elif parm.__class__.__name__ == 'ParameterMultipleInput':
+                args[v.identifier] = []
+                fileNames = v.getValue()
+                if fileNames and not isinstance(fileNames, list):
+                    fileNames = [fileNames]
+                if not fileNames:
+                    fileNames = []
+
+                if parm.datatype == ParameterMultipleInput.TYPE_VECTOR_ANY or \
+                   parm.datatype == ParameterMultipleInput.TYPE_VECTOR_POINT or \
+                   parm.datatype == ParameterMultipleInput.TYPE_VECTOR_LINE or \
+                   parm.datatype == ParameterMultipleInput.TYPE_VECTOR_POLYGON:
+                    if vectorLayers :
+                        values = [l for l in vectorLayers if l['name'] in fileNames]
+                        if parm.datatype == ParameterMultipleInput.TYPE_VECTOR_POINT:
+                            values = [l for l in values if l['geometry'] == 'Point']
+                        elif parm.datatype == ParameterMultipleInput.TYPE_VECTOR_LINE:
+                            values = [l for l in values if l['geometry'] == 'Line']
+                        elif parm.datatype == ParameterMultipleInput.TYPE_VECTOR_POLYGON:
+                            values = [l for l in values if l['geometry'] == 'Polygon']
+                        for l in values:
+                            layer = QgsVectorLayer( l['datasource'], l['name'], l['provider'] )
+                            crs = l['crs']
+                            qgsCrs = None
+                            if str(crs).startswith('USER:') :
+                                qgsCrs = QgsCoordinateReferenceSystem()
+                                qgsCrs.createFromProj4( str(l['proj4']) )
+                            else :
+                                qgsCrs = QgsCoordinateReferenceSystem( str(crs) )
+                            if qgsCrs :
+                                layer.setCrs( qgsCrs )
+                            mlr.addMapLayer( layer, False )
+                            args[v.identifier].append(layer)
+                    else :
+                        for fileName in fileNames:
+                            fileInfo = QFileInfo( fileName )
+                            # move fileName to fileName.gml for ogr
+                            with open( fileName, 'r' ) as f :
+                                o = open( fileName+'.gml', 'w' )
+                                o.write( f.read() )
+                                o.close()
+                            #import shutil
+                            #shutil.copy2(fileName+'.gml', '/tmp/test.gml' )
+                            # get layer
+                            layer = QgsVectorLayer( fileName+'.gml', fileInfo.baseName(), 'ogr' )
+                            pr = layer.dataProvider()
+                            e = layer.extent()
+                            mlr.addMapLayer( layer, False )
+                            args[v.identifier].append(layer)
+
+                if parm.datatype == ParameterMultipleInput.TYPE_RASTER :
+                    if rasterLayers :
+                        values = [l for l in rasterLayers if l['name'] in fileNames]
+                        for l in values:
+                            layer = QgsRasterLayer( l['datasource'], l['name'], l['provider'] )
+                            crs = l['crs']
+                            qgsCrs = None
+                            if str(crs).startswith('USER:') :
+                                qgsCrs = QgsCoordinateReferenceSystem()
+                                qgsCrs.createFromProj4( str(l['proj4']) )
+                            else :
+                                qgsCrs = QgsCoordinateReferenceSystem( str(crs) )
+                            if qgsCrs :
+                                layer.setCrs( qgsCrs )
+                            mlr.addMapLayer( layer, False )
+                            args[v.identifier].append(layer)
+                    else :
+                        for fileName in fileNames:
+                            fileInfo = QFileInfo( fileName )
+                            layer = QgsRasterLayer( fileName, fileInfo.baseName(), 'gdal' )
+                            mlr.addMapLayer( layer, False )
+                            args[v.identifier].append(layer)
+
             elif parm.__class__.__name__ == 'ParameterExtent':
                 if v.getValue():
                     coords = v.getValue().coords
