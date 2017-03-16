@@ -25,6 +25,7 @@ from PyQt4.QtCore import *
 import os, types
 import sys
 import re
+import logging
 import traceback
 
 sys.path.append(os.path.join(os.path.dirname(
@@ -1046,7 +1047,12 @@ class wpsFilter(QgsServerFilter):
                 if request_body:
                     method = 'POST'
                 QgsMessageLog.logMessage("method " + method)
+                root = logging.getLogger()
+                if root.handlers:
+                    for handler in root.handlers:
+                        root.removeHandler(handler)
                 wps = pywps.Pywps(method)
+                logging.info("method " + method)
 
                 # create the request file for POST request
                 if request_body:
