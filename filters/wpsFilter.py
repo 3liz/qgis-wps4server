@@ -40,7 +40,10 @@ from processing.core.ProcessingConfig import ProcessingConfig, Setting
 from processing.core.parameters import *
 from processing.tools.general import *
 # Note: SilentProgress used to be GUI
-from processing.core.SilentProgress import SilentProgress
+try:
+    from processing.core.SilentProgress import SilentProgress
+except:
+    from processing.gui.SilentProgress import SilentProgress
 
 
 def get_processing_algs():
