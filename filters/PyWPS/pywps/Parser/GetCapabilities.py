@@ -21,7 +21,8 @@ This module parses OGC Web Processing Service (WPS) GetCapabilities request.
 #
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+# 02110-1301  USA
 
 import xml.dom.minidom
 
@@ -29,16 +30,16 @@ import pywps
 from pywps.Parser.Post import Post as PostParser
 from pywps.Parser.Get import Get as GetParser
 
+
 class Post(PostParser):
     """Parses input request obtained via HTTP POST encoding - should be XML
     file.
     """
 
-    def __init__(self,wps):
-        PostParser.__init__(self,wps)
+    def __init__(self, wps):
+        PostParser.__init__(self, wps)
 
-
-    def parse(self,document, initInputs = None):
+    def parse(self, document, initInputs=None):
         """ Parse the requested XML document"""
         self.document = document  # input DOM
 
@@ -63,34 +64,35 @@ class Post(PostParser):
 
         # acceptVersions
         acceptedVersionsNodes = self.document.getElementsByTagNameNS(
-                                                wpsNameSpace,"AcceptVersions")
+            wpsNameSpace, "AcceptVersions")
         if len(acceptedVersionsNodes) > 0:
             for versionNode in\
-                acceptedVersionsNodes[-1].getElementsByTagNameNS(owsNameSpace,"Version"):
+                    acceptedVersionsNodes[-1].getElementsByTagNameNS(owsNameSpace, "Version"):
                 versions.append(versionNode.firstChild.nodeValue)
         if len(versions) == 0:
             versions = self.wps.versions
         self.inputs["acceptversions"] = versions
         for version in self.inputs["acceptversions"]:
             if version in self.wps.versions:
-                self.inputs["version"]=version
+                self.inputs["version"] = version
         if not "version" in self.inputs:
             raise pywps.VersionNegotiationFailed(
-                                "There's no version in AcceptVersions parameter " +
-                                "that is supported by this server.")
+                "There's no version in AcceptVersions parameter " +
+                "that is supported by this server.")
 
         # language
         self.checkLanguage(firstChild)
 
         return self.inputs
 
+
 class Get(GetParser):
     """ Parses input request obtained via HTTP GET encoding.  """
-    
-    def __init__(self,wps):
-        GetParser.__init__(self,wps)
 
-    def parse(self,unparsedInputs, initInputs = None):
+    def __init__(self, wps):
+        GetParser.__init__(self, wps)
+
+    def parse(self, unparsedInputs, initInputs=None):
         """ Parse rawly parsed inputs """
 
         if initInputs:
@@ -109,16 +111,16 @@ class Get(GetParser):
         # AcceptVersions
         try:
             self.inputs["acceptversions"] = \
-                               self.unparsedInputs["acceptversions"].split(",")
-        except KeyError,e:
+                self.unparsedInputs["acceptversions"].split(",")
+        except KeyError, e:
             self.inputs["acceptversions"] = self.wps.versions
         for version in self.inputs["acceptversions"]:
             if version in self.wps.versions:
-                self.inputs["version"]=version
+                self.inputs["version"] = version
         if not "version" in self.inputs:
             raise pywps.VersionNegotiationFailed(
-                                "There's no version in AcceptVersions parameter " +
-                                "that is supported by this server.")
+                "There's no version in AcceptVersions parameter " +
+                "that is supported by this server.")
 
         # Language
         self.checkLanguage()

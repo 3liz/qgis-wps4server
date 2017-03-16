@@ -51,7 +51,8 @@ __version__ = "3.2.2"
 #
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+# 02110-1301  USA
 
 
 # first qgis
@@ -64,7 +65,10 @@ import pywps
 from pywps import config
 from pywps.Exceptions import *
 
-import sys,os,traceback,inspect
+import sys
+import os
+import traceback
+import inspect
 
 # get the request method and inputs
 method = os.getenv("REQUEST_METHOD")
@@ -78,11 +82,11 @@ if method == pywps.METHOD_GET:
     except KeyError:
         # if QUERY_STRING isn't found in env-dictionary, try to read
         # query from command line:
-        if len(sys.argv)>1:  # any arguments available?
+        if len(sys.argv) > 1:  # any arguments available?
             inputQuery = sys.argv[1]
     if not inputQuery:
-        err =  NoApplicableCode("No query string found.")
-        pywps.response.response(err,sys.stdout)
+        err = NoApplicableCode("No query string found.")
+        pywps.response.response(err, sys.stdout)
         sys.exit(1)
 else:
     inputQuery = sys.stdin
@@ -92,20 +96,21 @@ wps = None
 try:
     # Get or define user_folder
     config.loadConfiguration()
-    user_folder = os.path.dirname( os.path.abspath( inspect.getfile( inspect.currentframe() ) ) )
-    if config.config.has_option( 'qgis', 'user_folder' ) :
-        user_folder = config.getConfigValue( 'qgis', 'user_folder' )
+    user_folder = os.path.dirname(os.path.abspath(
+        inspect.getfile(inspect.currentframe())))
+    if config.config.has_option('qgis', 'user_folder'):
+        user_folder = config.getConfigValue('qgis', 'user_folder')
 
     # init QgsApplication
-    QgsApplication( sys.argv, False, user_folder )
+    QgsApplication(sys.argv, False, user_folder)
     # supply path to where is your qgis installed
-    QgsApplication.setPrefixPath( config.getConfigValue("qgis","prefix"), True )
+    QgsApplication.setPrefixPath(config.getConfigValue("qgis", "prefix"), True)
 
     # load providers
     QgsApplication.initQgis()
 
     # initialize application
-    qa = QApplication( sys.argv )
+    qa = QApplication(sys.argv)
     wps = pywps.Pywps(method)
     if wps.parseRequest(inputQuery):
         pywps.debug(wps.inputs)
@@ -113,14 +118,13 @@ try:
         # request performed, write the response back
         if response:
             # print only to standard out
-                pywps.response.response(wps.response,
-                    sys.stdout,wps.parser.soapVersion,wps.parser.isSoap,wps.parser.isSoapExecute, wps.request.contentType)
+            pywps.response.response(wps.response,
+                                    sys.stdout, wps.parser.soapVersion, wps.parser.isSoap, wps.parser.isSoapExecute, wps.request.contentType)
     QgsApplication.exitQgis()
     qa.exit()
 
-except WPSException,e:
+except WPSException, e:
     traceback.print_exc(file=pywps.logFile)
     pywps.response.response(e, sys.stdout, wps.parser.soapVersion,
                             wps.parser.isSoap,
                             wps.parser.isSoapExecute)
-

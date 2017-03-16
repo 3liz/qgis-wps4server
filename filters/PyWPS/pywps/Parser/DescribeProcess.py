@@ -21,7 +21,8 @@ This module parses OGC Web Processing Service (WPS) DescribeProcess request.
 #
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+# 02110-1301  USA
 
 import xml.dom.minidom
 import pywps
@@ -29,24 +30,24 @@ from pywps.Parser.Post import Post as PostParser
 from pywps.Parser.Get import Get as GetParser
 
 
-
 class Post(PostParser):
     """
     Parses input request obtained via HTTP POST encoding - should be XML
     file.
     """
-    def __init__(self,wps):
-        PostParser.__init__(self,wps)
 
-    def parse(self,document, initInputs = None):
+    def __init__(self, wps):
+        PostParser.__init__(self, wps)
+
+    def parse(self, document, initInputs=None):
 
         if initInputs:
             self.inputs = initInputs
 
         self.document = document  # input DOM
 
-	firstChild = self.isSoapFirstChild(self.document)
-	owsNameSpace = pywps.OWS_NAMESPACE
+        firstChild = self.isSoapFirstChild(self.document)
+        owsNameSpace = pywps.OWS_NAMESPACE
         identifiers = []
         identifierNode = None
 
@@ -60,7 +61,7 @@ class Post(PostParser):
 
         # identifiers
         for identifierNode in self.document.getElementsByTagNameNS(
-                owsNameSpace,"Identifier"):
+                owsNameSpace, "Identifier"):
             identifiers.append(identifierNode.firstChild.nodeValue)
         if len(identifiers) == 0:
             raise pywps.MissingParameterValue("Identifier")
@@ -74,14 +75,16 @@ class Post(PostParser):
 
         return self.inputs
 
+
 class Get(GetParser):
     """
     Parses input request obtained via HTTP GET encoding.
     """
-    def __init__(self,wps):
-        GetParser.__init__(self,wps)
 
-    def parse(self,unparsedInputs, initInputs=None):
+    def __init__(self, wps):
+        GetParser.__init__(self, wps)
+
+    def parse(self, unparsedInputs, initInputs=None):
         """ Parse given raw inputs"""
 
         if initInputs:
@@ -99,7 +102,8 @@ class Get(GetParser):
 
         # identifier
         if "identifier" in self.unparsedInputs:
-            self.inputs["identifier"] = self.unparsedInputs["identifier"].split(",")
+            self.inputs["identifier"] = self.unparsedInputs[
+                "identifier"].split(",")
         else:
             raise pywps.MissingParameterValue("identifier")
 

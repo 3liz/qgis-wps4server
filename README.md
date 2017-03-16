@@ -148,12 +148,17 @@ The **qgis** section contains:
 * **algs** a list of processes to publish; for example *qgis:fixeddistancebuffer,qgis:delaunaytriangulation,qgis:concavehull*
 * **input_bbox_crss** a list of available input bounding box CRSs
 * **output_ows_crss** a list of available CRSs for Opengis Web Service output
-* **outputs_minetypes_vector** a list of available output mimeTypes for vector, this parameter is made for reducing the list and select the default one
-* **outputs_minetypes_raster** a list of available output mimeTypes for raster, this parameter is made for reducing the list and select the default one
+* **outputs_mimetypes_vector** a list of available output mimeTypes for vector, this parameter is made for reducing the list and select the default one
+* **outputs_mimetypes_raster** a list of available output mimeTypes for raster, this parameter is made for reducing the list and select the default one
+
+The **server** section is documented in the `pywps/doc/` folder, but some QGIS spcific behaviours are described here:
+* **outputUrl** the base URL for the returned results, if the URS begins with a `/`, the protocol, port and domain name will be automatically taken from the server CGI environment, this allows for zero-configuration deployments (e.g. in a docker container).
+
+
 
 To use an other config file than the default one, you can use:
 * **CONFIG** parameter in the URL
-* **PYWPS_CFG** environmental param
+* **PYWPS_CFG** environment variable
 
 Use default data
 ------------------
@@ -162,4 +167,4 @@ wps4server is able to use server geodata, which datasource is defined in a QGIS 
 
 To use a QGIS project, you can use:
 * **MAP** parameter in the URL, like for the others OGC Web Services
-* **QGIS_PROJECT_FILE** environmental param
+* **QGIS_PROJECT_FILE** environment variable

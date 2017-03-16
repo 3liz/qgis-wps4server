@@ -23,20 +23,21 @@ Each class in the package is resposible for each type of the request.
 #
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+# 02110-1301  USA
 
 __all__ = [
-        "Get",
-        "Post",
-        "GetCapabilities",
-        "DescribeProcess",
-        "Execute"
-        ]
+    "Get",
+    "Post",
+    "GetCapabilities",
+    "DescribeProcess",
+    "Execute"
+]
 
 
 class Parser:
     """Parent class for all request parsers.
-    
+
     .. attribute:: wps
 
         instace of :class:`pywps.Pywps`
@@ -52,15 +53,15 @@ class Parser:
 
     wps = None
     isSoap = False
-    soapVersion=None
-    isSoapExecute=None
+    soapVersion = None
+    isSoapExecute = None
     inputs = None
 
-    def __init__(self,wps):
+    def __init__(self, wps):
         self.wps = wps
         self.inputs = {}
-    
-    def _trueOrFalse(self,str):
+
+    def _trueOrFalse(self, str):
         """Return True or False, if input is "true" or "false" 
         :param str: String to be checks and returned
         :returns: bool or str 
@@ -71,4 +72,3 @@ class Parser:
             return True
         else:
             return str
-

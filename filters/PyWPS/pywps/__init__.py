@@ -63,7 +63,8 @@ example how to use this module::
 
 """
 
-__all__ = [ "Parser","processes", "Process", "Exceptions", "Wps", "Templates","Template","XSLT","Ftp"]
+__all__ = ["Parser", "processes", "Process", "Exceptions",
+           "Wps", "Templates", "Template", "XSLT", "Ftp"]
 
 # Author:	Jachym Cepicky
 #        	http://les-ejk.cz
@@ -83,7 +84,8 @@ __all__ = [ "Parser","processes", "Process", "Exceptions", "Wps", "Templates","T
 #
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+# 02110-1301  USA
 
 import pywps
 import config
@@ -93,20 +95,22 @@ import Exceptions
 import Wps
 from Exceptions import *
 
-import logging, uuid
+import logging
+import uuid
 
 # global variables
-METHOD_GET="GET"
-METHOD_POST="POST"
+METHOD_GET = "GET"
+METHOD_POST = "POST"
 OWS_NAMESPACE = "http://www.opengis.net/ows/1.1"
 WPS_NAMESPACE = "http://www.opengis.net/wps/1.0.0"
 XLINK_NAMESPACE = "http://www.w3.org/1999/xlink"
 
-PYWPS_INSTALL_DIR = None # this working directory
+PYWPS_INSTALL_DIR = None  # this working directory
 DEFAULT_LANG = "en-CA"
 DEFAULT_VERSION = "1.0.0"
 
 logFile = None
+
 
 class Pywps:
     """This is main PyWPS Class, which parses the request, performs the
@@ -163,12 +167,12 @@ class Pywps:
 
     method = METHOD_GET                     # HTTP POST or GET
 
-    inputs = None # parsed input values
-    request = None # object with getcapabilities/describeprocess/execute
+    inputs = None  # parsed input values
+    request = None  # object with getcapabilities/describeprocess/execute
     parser = None
 
     languages = [DEFAULT_LANG]
-    versions=[DEFAULT_VERSION]
+    versions = [DEFAULT_VERSION]
     UUID = None
 
     def __init__(self, method=METHOD_GET, configFiles=None):
@@ -178,20 +182,19 @@ class Pywps:
         # get settings
         config.loadConfiguration(configFiles)
         self.setLogFile()
-        self.UUID = uuid.uuid1().__str__()
+        self.UUID = uuid.uuid4().__str__()
 
-        self.languages = config.getConfigValue("wps","lang").split(",")
+        self.languages = config.getConfigValue("wps", "lang").split(",")
         DEFAULT_LANG = self.languages[0]
 
         # set default version
-        self.versions = config.getConfigValue("wps","version").split(",")
+        self.versions = config.getConfigValue("wps", "version").split(",")
         DEFAULT_VERSION = self.versions[0]
 
         # find out the request method
         self.method = method
 
-
-    def parseRequest(self,queryStringObject):
+    def parseRequest(self, queryStringObject):
         """
         Parse input OGC WPS request, which is either URL Query string or
         file object, e.g.  :mod:`sys.stdin`
@@ -213,7 +216,7 @@ class Pywps:
         self.inputs = self.parser.parse(queryStringObject)
         return self.inputs
 
-    def performRequest(self,inputs = None, processes=None):
+    def performRequest(self, inputs=None, processes=None):
         """Performs the desired WSP Request.
 
         :param inputs: idealy self.inputs (Default) object, result from
@@ -226,22 +229,22 @@ class Pywps:
 
         # the modules are imported first, when the request type is known
         if inputs.has_key("request"):
-            if inputs["request"]  == "getcapabilities":
+            if inputs["request"] == "getcapabilities":
                 from pywps.Wps.GetCapabilities import GetCapabilities
-                self.request = GetCapabilities(self,processes=processes)
-            elif inputs["request"]  == "describeprocess":
+                self.request = GetCapabilities(self, processes=processes)
+            elif inputs["request"] == "describeprocess":
                 from pywps.Wps.DescribeProcess import DescribeProcess
                 self.request = DescribeProcess(self, processes=processes)
-            elif inputs["request"]  == "execute":
+            elif inputs["request"] == "execute":
                 from pywps.Wps.Execute import Execute
-                self.request = Execute(self,processes=processes)
+                self.request = Execute(self, processes=processes)
         elif inputs.has_key("wsdl"):
-            inputs["version"]="1.0.0"
+            inputs["version"] = "1.0.0"
             from pywps.Wps.Wsdl import Wsdl
             self.request = Wsdl(self)
         else:
             raise Exceptions.InvalidParameterValue(
-                    "request: "+inputs["request"])
+                "request: " + inputs["request"])
         self.response = self.request.response
         return self.response
 
@@ -249,17 +252,19 @@ class Pywps:
         """Set :data:`logFile`. Default is sys.stderr
         """
         global logFile
-        fileName = config.getConfigValue("server","logFile")
-        logLevel = eval("logging."+config.getConfigValue("server","logLevel").upper())
+        fileName = config.getConfigValue("server", "logFile")
+        logLevel = eval(
+            "logging." + config.getConfigValue("server", "logLevel").upper())
         format = "PyWPS [%(asctime)s] %(levelname)s: %(message)s"
         if not fileName:
-            logging.basicConfig(level=logLevel,format=format)
+            logging.basicConfig(level=logLevel, format=format)
         else:
-            logging.basicConfig(filename=fileName,level=logLevel,format=format)
+            logging.basicConfig(filename=fileName,
+                                level=logLevel, format=format)
             logFile = open(fileName, "a")
 
 
-def debug(debug,code="Debug"):
+def debug(debug, code="Debug"):
     """Print debug argument to standard error
 
     .. note:: Deprecated from 3.2, use ::
@@ -281,10 +286,9 @@ def debug(debug,code="Debug"):
     logging.debug(debug)
 
     #dbg = config.getConfigValue("server","debug")
-    #if dbg == True or (type(dbg) == type("") and \
+    # if dbg == True or (type(dbg) == type("") and \
     #        dbg.lower() == "true") or int(dbg) != 0:
     #    print >>logFile, "PyWPS %s: %s" % (code,debug.__str__()[0:160]),
     #    if len(debug.__str__()) > 160:
     #        print >>logFile, "...",
     #    print >>logFile, "\n"
-

@@ -21,13 +21,17 @@ locations and mapsets
 #
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+# 02110-1301  USA
 
 import os
-import time, shutil, tempfile
+import time
+import shutil
+import tempfile
 import sys
 from pywps import config
 import logging
+
 
 class Grass:
     """ GRASS initialization interface """
@@ -38,36 +42,37 @@ class Grass:
     mapsetName = ""
     gisbase = ""
 
-    def  __init__(self,executeRequest):
+    def __init__(self, executeRequest):
         """ Initialization of GRASS environmental variables (except GISRC).  """
 
         self.executeRequest = executeRequest
         self.wps = self.executeRequest.wps
         self.envs = {
-                "path":"PATH",
-                "addonPath":"GRASS_ADDON_PATH",
-                "version":"GRASS_VERSION",
-                "gui":"GRASS_GUI",
-                "gisbase": "GISBASE",
-                "ldLibraryPath": "LD_LIBRARY_PATH"
+            "path": "PATH",
+            "addonPath": "GRASS_ADDON_PATH",
+            "version": "GRASS_VERSION",
+            "gui": "GRASS_GUI",
+            "gisbase": "GISBASE",
+            "ldLibraryPath": "LD_LIBRARY_PATH"
         }
 
         # put env
         for key in self.envs.keys():
             try:
-                self.setEnv(self.envs[key],config.getConfigValue("grass",key))
-                logging.info("GRASS environment variable %s set to %s" %\
-                        (key, config.getConfigValue("grass",key)))
-            except :
-                logging.info("GRASS environment variable %s set to %s" %\
-                        (key, self.envs[key]))
+                self.setEnv(self.envs[key],
+                            config.getConfigValue("grass", key))
+                logging.info("GRASS environment variable %s set to %s" %
+                             (key, config.getConfigValue("grass", key)))
+            except:
+                logging.info("GRASS environment variable %s set to %s" %
+                             (key, self.envs[key]))
                 pass
 
         # GIS_LOCK
-        self.setEnv('GIS_LOCK',str(os.getpid()))
+        self.setEnv('GIS_LOCK', str(os.getpid()))
         logging.info("GRASS GIS_LOCK set to %s" % str(os.getpid()))
 
-    def mkMapset(self,location=None):
+    def mkMapset(self, location=None):
         """
         Create GRASS mapset in current directory. Mapsets name is 'mapset'.
         At the end, GRASS will believe, it has run correctly.
@@ -86,7 +91,8 @@ class Grass:
         if location == None:
             self.locationDir = self.executeRequest.workingDir
 
-            self.mapsetDir = tempfile.mkdtemp(prefix="pywps",dir=self.locationDir)
+            self.mapsetDir = tempfile.mkdtemp(
+                prefix="pywps", dir=self.locationDir)
             self.mapsetName = os.path.split(self.mapsetDir)[1]
             self.locationName = os.path.split(self.locationDir)[1]
 
@@ -101,38 +107,42 @@ class Grass:
 
         # location is here, we justhave to use it
         else:
-            self.locationDir = os.path.join(config.getConfigValue("grass","gisdbase"), location)
-            self.mapsetDir = tempfile.mkdtemp(prefix="pywps",dir=self.locationDir)
+            self.locationDir = os.path.join(
+                config.getConfigValue("grass", "gisdbase"), location)
+            self.mapsetDir = tempfile.mkdtemp(
+                prefix="pywps", dir=self.locationDir)
             self.mapsetName = os.path.split(self.mapsetDir)[1]
             self.locationName = os.path.split(location)[-1]
 
-            self.executeRequest.dirsToBeRemoved.append(os.path.abspath(self.mapsetDir))
+            self.executeRequest.dirsToBeRemoved.append(
+                os.path.abspath(self.mapsetDir))
 
             # copy
             shutil.copy(os.path.join(
-                self.locationDir,"PERMANENT","DEFAULT_WIND"),
-                os.path.join(self.mapsetDir,"WIND"))
+                self.locationDir, "PERMANENT", "DEFAULT_WIND"),
+                os.path.join(self.mapsetDir, "WIND"))
 
             # export env. vars
-            (self.gisdbase,location) = os.path.split(self.locationDir)
+            (self.gisdbase, location) = os.path.split(self.locationDir)
 
         # GRASS creates a temp dir for the display driver.
         # Add it to dirsToBeRemoved
         try:
             grassTmpDir = os.path.join(tempfile.gettempdir(),
-                                       "grass"+config.getConfigValue("grass","version")[:1]+\
-                                       "-"+os.getenv("USERNAME")+\
-                                       "-"+str(os.getpid()))
+                                       "grass" + config.getConfigValue("grass", "version")[:1] +
+                                       "-" + os.getenv("USERNAME") +
+                                       "-" + str(os.getpid()))
             self.executeRequest.dirsToBeRemoved.append(grassTmpDir)
-        except :
+        except:
             pass
 
         self.setEnv('MAPSET', self.mapsetName)
-        self.setEnv('LOCATION_NAME',self.locationName)
+        self.setEnv('LOCATION_NAME', self.locationName)
         self.setEnv('GISDBASE', self.gisdbase)
 
         # gisrc
-        gisrc = open(os.path.join(self.executeRequest.workingDir,"grassrc"),"w")
+        gisrc = open(os.path.join(
+            self.executeRequest.workingDir, "grassrc"), "w")
         gisrc.write("LOCATION_NAME: %s\n" % self.locationName)
         gisrc.write("MAPSET: %s\n" % self.mapsetName)
         gisrc.write("DIGITIZER: none\n")
@@ -145,12 +155,14 @@ class Grass:
         logging.info("GRASS LOCATION_NAME set to %s" % self.locationName)
         logging.info("GRASS GISDBASE set to %s" % self.gisdbase)
 
-        self.setEnv("GISRC",os.path.join(self.executeRequest.workingDir,"grassrc"))
-        logging.info("GRASS GISRC set to %s" % os.path.join(self.executeRequest.workingDir,"grassrc"))
+        self.setEnv("GISRC", os.path.join(
+            self.executeRequest.workingDir, "grassrc"))
+        logging.info("GRASS GISRC set to %s" % os.path.join(
+            self.executeRequest.workingDir, "grassrc"))
 
         return self.mapsetName
 
-    def _windFile(self,mapset):
+    def _windFile(self, mapset):
         """ Create default WIND file """
 
         if mapset == "PERMANENT":
@@ -158,9 +170,9 @@ class Grass:
         else:
             windname = "WIND"
 
-        wind =open(
-                os.path.join(
-                    os.path.abspath(self.executeRequest.workingDir),mapset,windname),"w")
+        wind = open(
+            os.path.join(
+                os.path.abspath(self.executeRequest.workingDir), mapset, windname), "w")
         wind.write("""proj:       0\n""")
         wind.write("""zone:       0\n""")
         wind.write("""north:      1000\n""")
@@ -174,12 +186,12 @@ class Grass:
         wind.close()
         return
 
-    def setEnv(self,key,value):
+    def setEnv(self, key, value):
         """Set GRASS environmental variables """
         origValue = os.getenv(key)
-        #REMOVED: It doesnt seem necessary
-        #if origValue:
+        # REMOVED: It doesnt seem necessary
+        # if origValue:
         #    value  += ":"+origValue
-        os.putenv(key,value)
+        os.putenv(key, value)
         os.environ[key] = value
         return

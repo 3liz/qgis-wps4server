@@ -19,17 +19,24 @@ Inputs and outputs of OGC WPS Processes
 #
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+# 02110-1301  USA
 
-import os,types,re, base64,logging
+import os
+import types
+import re
+import base64
+import logging
 from pywps import Exceptions
 import sys
-import urllib, tempfile
+import urllib
+import tempfile
 
 try:
     import magic
 except:
     logging.debug("Could not import magic module")
+
 
 class Input:
     """Class WPS Input
@@ -88,10 +95,10 @@ class Input:
     maxOccurs = None
     type = None
     value = None
-    ms = None # magic mimeTypes
+    ms = None  # magic mimeTypes
 
-    def __init__(self,identifier,title,abstract=None,
-                metadata=[],minOccurs=1,maxOccurs=1,type=None):
+    def __init__(self, identifier, title, abstract=None,
+                 metadata=[], minOccurs=1, maxOccurs=1, type=None):
         """Class constructor"""
 
         self.identifier = identifier
@@ -106,28 +113,28 @@ class Input:
 
         return
 
-    def setValue(self,input):
+    def setValue(self, input):
         """Control in some way the input value from the client
 
         :param input: input value, parsed in :mod:`pywps.Parser.Execute`
         """
 
         for inpt in input["value"]:
-            resp =  self._setValueWithOccurence(self.value, inpt)
+            resp = self._setValueWithOccurence(self.value, inpt)
             if resp:
                 return resp
         return
 
-    def _setValueWithOccurence(self,oldValues, newValue):
+    def _setValueWithOccurence(self, oldValues, newValue):
         """Check min and max occurrence and set this.value"""
         if self.maxOccurs > 1:
             if not oldValues:
-                oldValues =  [newValue]
+                oldValues = [newValue]
             else:
                 if self.maxOccurs > len(oldValues):
                     oldValues.append(newValue)
                 else:
-                    return "Too many occurrences of input [%s]: %s" % (self.identifier,newValue)
+                    return "Too many occurrences of input [%s]: %s" % (self.identifier, newValue)
         else:
             oldValues = newValue
 
@@ -138,6 +145,7 @@ class Input:
         """Get this value """
 
         return self.value
+
 
 class LiteralInput(Input):
     """Literal input type of input.
@@ -197,22 +205,22 @@ class LiteralInput(Input):
 
     dataType = None
     uoms = None
-    restrictedCharacters = ['\\',"#",";", "&","!"]
+    restrictedCharacters = ['\\', "#", ";", "&", "!"]
     values = None
     default = None
     spacing = None
     uom = None
 
-    def __init__(self,identifier,title,abstract=None,
-                metadata=[],minOccurs=1,maxOccurs=1,dataType=types.StringType,
-                uoms=(),values=("*"),spacing=None,default=None):
+    def __init__(self, identifier, title, abstract=None,
+                 metadata=[], minOccurs=1, maxOccurs=1, dataType=types.StringType,
+                 uoms=(), values=("*"), spacing=None, default=None):
         """Class constructor"""
-        Input.__init__(self,identifier,title,abstract=abstract,
-                metadata=metadata,minOccurs=minOccurs,maxOccurs=maxOccurs,type="LiteralValue")
+        Input.__init__(self, identifier, title, abstract=abstract,
+                       metadata=metadata, minOccurs=minOccurs, maxOccurs=maxOccurs, type="LiteralValue")
 
         self.dataType = dataType
         self.uoms = uoms
-        self.restrictedCharacters = ['\\',"#",";", "&","!"]
+        self.restrictedCharacters = ['\\', "#", ";", "&", "!"]
         if type(values) == types.StringType:
             self.values = (values)
         elif type(values) == types.ListType:
@@ -230,11 +238,13 @@ class LiteralInput(Input):
         """
         if type(input["value"]) == types.ListType:
             for inpt in input["value"]:
-                resp = self._setValueWithOccurence(self.value, self._control(inpt))
+                resp = self._setValueWithOccurence(
+                    self.value, self._control(inpt))
                 if resp:
                     return resp
         else:
-            resp = self._setValueWithOccurence(self.value, self._control(input["value"]))
+            resp = self._setValueWithOccurence(
+                self.value, self._control(input["value"]))
             if resp:
                 return resp
 
@@ -250,14 +260,14 @@ class LiteralInput(Input):
         else:
             return
 
-    def _control(self,value):
+    def _control(self, value):
         """Control input value for dangerous characters or types, like "#"
 
         :param value: value to be controled
         """
 
-         # ugly characters, only if string
-        if  type(value)!= types.BooleanType:
+        # ugly characters, only if string
+        if type(value) != types.BooleanType:
             for char in self.restrictedCharacters:
                 if value.find(char) > -1:
                     raise Exceptions.InvalidParameterValue(value)
@@ -272,7 +282,7 @@ class LiteralInput(Input):
                 value = int(value)
             elif self.dataType == types.BooleanType:
                 value = bool(value)
-            #TODO other types missing
+            # TODO other types missing
         except (ValueError), e:
             raise Exceptions.InvalidParameterValue(value)
 
@@ -284,7 +294,7 @@ class LiteralInput(Input):
             if type(allowed) == types.ListType:
                 if allowed[0] <= value <= allowed[-1]:
                     if self.spacing:
-                        if (value - allowed[0])%spacing == 0:
+                        if (value - allowed[0]) % spacing == 0:
                             return value
                     else:
                         return value
@@ -294,6 +304,7 @@ class LiteralInput(Input):
                     return value
 
         raise Exceptions.InvalidParameterValue(value)
+
 
 class ComplexInput(Input):
     """ComplexInput type
@@ -340,22 +351,22 @@ class ComplexInput(Input):
     formats = None
     format = None
 
-    def __init__(self,identifier,title,abstract=None,
-                metadata=[],minOccurs=1,maxOccurs=1,
-                maxmegabites=None,formats=[{"mimeType":None}]):
+    def __init__(self, identifier, title, abstract=None,
+                 metadata=[], minOccurs=1, maxOccurs=1,
+                 maxmegabites=None, formats=[{"mimeType": None}]):
         """Class constructor"""
 
-        Input.__init__(self,identifier,title,abstract=abstract,
-                metadata=metadata,minOccurs=minOccurs,maxOccurs=maxOccurs,type="ComplexValue")
-        #If maxmegabites not present, then it will be set in  consolidateInputs()
+        Input.__init__(self, identifier, title, abstract=abstract,
+                       metadata=metadata, minOccurs=minOccurs, maxOccurs=maxOccurs, type="ComplexValue")
+        # If maxmegabites not present, then it will be set in
+        # consolidateInputs()
         if maxmegabites:
-            self.maxFileSize = float(maxmegabites)*1024*1024
+            self.maxFileSize = float(maxmegabites) * 1024 * 1024
         else:
             self.maxFileSize = None
 
-
         if type(formats) == types.StringType:
-            formats = [{"mimeType":formats,"encoding":None,"schema":None}]
+            formats = [{"mimeType": formats, "encoding": None, "schema": None}]
         elif type(formats) == types.DictType:
             formats = [formats]
 
@@ -392,34 +403,36 @@ class ComplexInput(Input):
             self.storeData(input["value"])
         return
 
-    def setMimeType(self,input):
+    def setMimeType(self, input):
         """Sets the MimeType from input before going to setValue() this allows
         for some self.format to be filled febore base64 decoding. URL inputs don't have an input[], since they are just URLs.
         There mimeType was implemented to URL references, basically it sets a self.format based on the input provided by the user e.g:http://localhost/wps.cgi?request=Execute&service=wps&version=1.0.0&identifier=geotiff2png&datainputs=[input=@xlink:href=http://rsg.pml.ac.uk/wps/testdata/elev_srtm_30m.tif@method=POST@mimeType=text%2Fxml]
         this example shall raise an exception"""
 
-        #NOTE: setting mimeType in URL and direct input should be the same, this if structure is here
-        #for historical reasons and allows to differencite between the 2 types or requests if in the future
+        # NOTE: setting mimeType in URL and direct input should be the same, this if structure is here
+        # for historical reasons and allows to differencite between the 2 types or requests if in the future
         # changes need to be done e.g setting mimetypes from HTTP stream etc
-        keys=["mimetype","schema","encoding"]
+        keys = ["mimetype", "schema", "encoding"]
         if not input.has_key("type") or self._isURL(input["value"]):
             for key in keys:
                 if key in input.keys():
-                    self.format[key]=input[key]
+                    self.format[key] = input[key]
                 else:
-                    logging.debug("input define by user didnt contain %s" % key)
-                    self.format[key]=None
+                    logging.debug(
+                        "input define by user didnt contain %s" % key)
+                    self.format[key] = None
         else:
             for key in keys:
                 if key in input.keys():
-                    self.format[key]=input[key]
+                    self.format[key] = input[key]
                 else:
-                    logging.debug("input define by user didnt contain %s" % key)
-                    self.format[key]=None
+                    logging.debug(
+                        "input define by user didnt contain %s" % key)
+                    self.format[key] = None
 
         return
 
-    def storeData(self,data):
+    def storeData(self, data):
         """Store data from given file. Not bigger, then
         :attr:`maxFileSize`
 
@@ -429,43 +442,49 @@ class ComplexInput(Input):
         import tempfile
         from os import curdir, rename
 
-        outputName = tempfile.mktemp(prefix="pywpsInput",dir=curdir)
+        outputName = tempfile.mktemp(prefix="pywpsInput", dir=curdir)
         fout = None
         try:
-            fout=open(outputName,'wb')
-        except IOError, what:
-            self.onProblem("NoApplicableCode","Could not open file for writing")
+            fout = open(outputName, 'wb')
+        except IOError as what:
+            self.onProblem("NoApplicableCode",
+                           "Could not open file for writing")
         # NOTE: the filesize should be already checked in pywps/Post.py,
         # while getting the input XML file
-        fout.write(data.encode("utf-8","utf-8"))
+        fout.write(data.encode("utf-8", "utf-8"))
         fout.close()
 
         self.checkMimeTypeIn(fout.name)
 
-        #self.format already set
-        if  (self.format["mimetype"].lower().split("/")[0] != "text" and self.format["mimetype"].lower() != "application/xml"):
-               # convert it to binary using base64
-               #Python problem: The file object has to be closed after base64.decode, so that ALL content is flushed, otherwise the binary files are corrupted
-               #This happens if the base64 has some 'trash' before and after the string. Better to use close() to be certain
-               rename(fout.name,fout.name+".base64")
-               try:
-                   f1=open(fout.name+".base64","r")
-                   f2=open(fout.name,"w")
-                   base64.decode(f1, f2)
-                   f1.close()
-                   f2.close()
-               except:
-                   self.onProblem("NoApplicableCode", "Could not convert text input to binary using base64 encoding.")
-               finally:
-                    os.remove(fout.name+".base64")
-        #Checking what is actu
+        # self.format already set
+        if (self.format["mimetype"].lower().split("/")[0] != "text" and self.format["mimetype"].lower() != "application/xml"):
+            # convert it to binary using base64
+            # Python problem: The file object has to be closed after base64.decode, so that ALL content is flushed, otherwise the binary files are corrupted
+            # This happens if the base64 has some 'trash' before and after the
+            # string. Better to use close() to be certain
+            rename(fout.name, fout.name + ".base64")
+            try:
+                f1 = open(fout.name + ".base64", "r")
+                f2 = open(fout.name, "w")
+                # Might fail with incorrect padding in some situations
+                base64.decode(f1, f2)
+                f1.close()
+                f2.close()
+            except Exception as e:
+                import pdb; pdb.set_trace()
+                self.onProblem(
+                    "NoApplicableCode", "Could not convert text input to binary using base64 encoding. %s" % (e,))
+            finally:
+                if os.path.exists(fout.name + ".base64"):
+                    os.remove(fout.name + ".base64")
+        # Checking what is actu
         try:
-            mimeTypeMagic=self.ms.file(fileName).split(';')[0]
-            if self.format["mimetype"]!=mimeTypeMagic:
-                logging.debug("ComplexDataInput defines mimeType %s (default set) but libMagic detects %s" % (str(self.format["mimetype"]),mimeTypeMagic))
+            mimeTypeMagic = self.ms.file(fileName).split(';')[0]
+            if self.format["mimetype"] != mimeTypeMagic:
+                logging.debug("ComplexDataInput defines mimeType %s (default set) but libMagic detects %s" % (
+                    str(self.format["mimetype"]), mimeTypeMagic))
         except:
             pass
-
 
         resp = self._setValueWithOccurence(self.value, outputName)
         if resp:
@@ -481,7 +500,7 @@ class ComplexInput(Input):
         """
 
         if asFile == True:
-            return open(self.value,"r")
+            return open(self.value, "r")
         else:
             return self.value
 
@@ -495,16 +514,17 @@ class ComplexInput(Input):
 
         try:
             inputUrl = urllib.urlopen(urllib.unquote(url))
-        except IOError,e:
-            self.onProblem("NoApplicableCode",e)
+        except IOError, e:
+            self.onProblem("NoApplicableCode", e)
 
-        outputName = tempfile.mktemp(prefix="pywpsInput",dir=curdir)
+        outputName = tempfile.mktemp(prefix="pywpsInput", dir=curdir)
 
         fout = None
         try:
-            fout=open(outputName,'wb')
+            fout = open(outputName, 'wb')
         except IOError, what:
-            self.onProblem("NoApplicableCode","Could not open file for writing")
+            self.onProblem("NoApplicableCode",
+                           "Could not open file for writing")
 
         # ok, get the file!
         size = 0
@@ -514,20 +534,20 @@ class ComplexInput(Input):
             chunk = inputUrl.read(100000)
 
             # something is wrong
-            if re.search("not found",chunk,re.IGNORECASE):
+            if re.search("not found", chunk, re.IGNORECASE):
                 self.onProblem("NoApplicableCode",
-                    "Remote server says: [%s] not found" % (url))
+                               "Remote server says: [%s] not found" % (url))
 
             # everything is here, break
             if not chunk:
                 break
-            fout.write (chunk)
+            fout.write(chunk)
 
             # TOO BIG! STOP THIS
-            if (self.maxFileSize!=0 and (size > self.maxFileSize)):
-                self.onProblem("FileSizeExceeded","Maximum file size is "+
-                        str(self.maxFileSize/1024/1024)+" MB for input "+
-                        url)
+            if (self.maxFileSize != 0 and (size > self.maxFileSize)):
+                self.onProblem("FileSizeExceeded", "Maximum file size is " +
+                               str(self.maxFileSize / 1024 / 1024) + " MB for input " +
+                               url)
         fout.close()
 
         self.checkMimeTypeIn(fout.name)
@@ -536,7 +556,7 @@ class ComplexInput(Input):
             return resp
         return
 
-    def onProblem(self,what, why):
+    def onProblem(self, what, why):
         """Empty method, called, when there was any problem with the input.
         This method is replaced in Execute.consolidateInputs, basically input.onProblem = self.onInputProblem
         therefore Exception raise is implemented in Execute.onInputProblem()
@@ -545,8 +565,7 @@ class ComplexInput(Input):
        """
         pass
 
-    def checkMimeTypeIn(self,fileName):
-
+    def checkMimeTypeIn(self, fileName):
         """Check, if the given mimetype is in self.formats
         checkMimeType is done after process.format is set by parsing user's content.
         1) if process.format[mimetype] has content it will be check in formats
@@ -558,34 +577,38 @@ class ComplexInput(Input):
         :param fileName:
         :param mimeType:
         """
-         #Note: magic output something like: 'image/tiff; charset=binary' we only need the typeContent
-        if (self.format["mimetype"] is None) or (self.format["mimetype"]==""):
-            #No mimeType let's set it from default
-            logging.debug("Missing ComplexDataInput mimeType in: %s, adopting default mimeType (first in formats list)" % self.identifier)
-            self.format["mimetype"]=self.formats[0]["mimeType"]
-            #wps-grass bridge, default schema and encoding
+        # Note: magic output something like: 'image/tiff; charset=binary' we
+        # only need the typeContent
+        if (self.format["mimetype"] is None) or (self.format["mimetype"] == ""):
+            # No mimeType let's set it from default
+            logging.debug(
+                "Missing ComplexDataInput mimeType in: %s, adopting default mimeType (first in formats list)" % self.identifier)
+            self.format["mimetype"] = self.formats[0]["mimeType"]
+            # wps-grass bridge, default schema and encoding
             try:
-                self.format["schema"]=self.formats[0]["schema"]
+                self.format["schema"] = self.formats[0]["schema"]
                 logging.debug("Adding schema: %s" % self.format["schema"])
-                self.format["encoding"]=self.formats[0]["encoding"]
+                self.format["encoding"] = self.formats[0]["encoding"]
                 logging.debug("Adding encoding: %s" % self.format["encoding"])
             except:
                 logging.debug("Adding schema and/or encoding failed, ")
-            #checking format with libmagic
+            # checking format with libmagic
             #--> new funcion aget base64 change
-            #mimeTypeMagic=self.ms.file(fileName).split(';')[0]
-            #if self.format["mimetype"]!=mimeTypeMagic:
+            # mimeTypeMagic=self.ms.file(fileName).split(';')[0]
+            # if self.format["mimetype"]!=mimeTypeMagic:
             #    logging.debug("ComplexDataInput defines mimeType %s (default set) but libMagic detects %s" % (str(self.format["mimetype"]),mimeTypeMagic))
         else:
-            #Checking is mimeType is in the acceptable formats
+            # Checking is mimeType is in the acceptable formats
             if self.format["mimetype"] not in [dic["mimeType"] for dic in self.formats]:
-                #ATTENTION: False positive if dictionary is not set in process/empty
-                if (len(self.formats)==1) and (type(self.formats[0]["mimeType"])==types.NoneType):
-                    logging.debug("Input %s without mimetype list, cant check if ComplexDataInput mimtype is correct or not" % self.identifier)
+                # ATTENTION: False positive if dictionary is not set in
+                # process/empty
+                if (len(self.formats) == 1) and (type(self.formats[0]["mimeType"]) == types.NoneType):
+                    logging.debug(
+                        "Input %s without mimetype list, cant check if ComplexDataInput mimtype is correct or not" % self.identifier)
                 else:
-                    logging.debug("ComplexDataInputXML defines mimeType %s  which is not in Input %s formats list" % (str(self.format["mimetype"]),str(self.identifier)))
-                    self.onProblem("InvalidParameterValue",self.identifier)
-
+                    logging.debug("ComplexDataInputXML defines mimeType %s  which is not in Input %s formats list" % (
+                        str(self.format["mimetype"]), str(self.identifier)))
+                    self.onProblem("InvalidParameterValue", self.identifier)
 
     def onMaxFileSizeExceeded(self, what):
         """Empty method, called, when there was any problem with the input.
@@ -594,21 +617,21 @@ class ComplexInput(Input):
         """
         pass
 
-    def onNotFound(self,what):
+    def onNotFound(self, what):
         """Empty method, called, when there was any problem with the input.
 
         :param what: Error code
         """
         pass
 
-    def _isURL(self,text):
+    def _isURL(self, text):
         """Check wheather given text is url or not
         """
 
         try:
             (urltype, opaquestring) = urllib.splittype(text)
 
-            if urltype in ["http","https","ftp"]:
+            if urltype in ["http", "https", "ftp"]:
                 return True
             else:
                 return False
@@ -662,12 +685,12 @@ class BoundingBoxInput(Input):
     crs = None
     coords = None
 
-    def __init__(self,identifier,title,abstract=None,
-                metadata=[],minOccurs=1,maxOccurs=1,dimensions=None,
-                crss=[]):
+    def __init__(self, identifier, title, abstract=None,
+                 metadata=[], minOccurs=1, maxOccurs=1, dimensions=None,
+                 crss=[]):
         """Class constructor"""
-        Input.__init__(self,identifier,title,abstract=abstract,
-                metadata=metadata,minOccurs=minOccurs,maxOccurs=maxOccurs,type="BoundingBoxValue")
+        Input.__init__(self, identifier, title, abstract=abstract,
+                       metadata=metadata, minOccurs=minOccurs, maxOccurs=maxOccurs, type="BoundingBoxValue")
 
         self.crss = crss
         self.dimensions = dimensions
@@ -675,7 +698,7 @@ class BoundingBoxInput(Input):
 
         return
 
-    def setValue(self,input):
+    def setValue(self, input):
         """Set value of this input
 
         :param input: bounding box parsed input in format::
@@ -687,7 +710,6 @@ class BoundingBoxInput(Input):
 
         :type value: tuple
         """
-
 
         class BBOX:
             """BBOX class is designed to contain attributes of Bounding
@@ -703,7 +725,6 @@ class BoundingBoxInput(Input):
 
         # define new instance
         value = BBOX()
-
 
         # convert possible string value to array
         if type(input["value"]) == type("") or\
@@ -722,12 +743,12 @@ class BoundingBoxInput(Input):
             coordsLen = len(input["value"])
 
             # last one is crs, take it
-            if len(input["value"])%2 == 1:
-                coordsLen = coordsLen-1
+            if len(input["value"]) % 2 == 1:
+                coordsLen = coordsLen - 1
                 value.crs = input["value"][-1]
                 input["value"] = input["value"][:-1]
 
-            value.dimensions = int(coordsLen/2)
+            value.dimensions = int(coordsLen / 2)
 
         value.coords = self._getCoords(input["value"])
 
@@ -735,10 +756,10 @@ class BoundingBoxInput(Input):
         if resp:
             return resp
 
-    def _getCoords(self,coords):
+    def _getCoords(self, coords):
         lowercorner = []
         uppercorner = []
-        dimensions = int(len(coords)/2)
+        dimensions = int(len(coords) / 2)
         lowercorner = map(lambda x: float(x), coords[:dimensions])
         uppercorner = map(lambda x: float(x), coords[dimensions:])
         return (lowercorner, uppercorner)
@@ -752,6 +773,7 @@ class BoundingBoxInput(Input):
 
         """
         return self.value
+
 
 class Output:
     """Class WPS Input
@@ -798,10 +820,10 @@ class Output:
     type = None
     asReference = None
     value = None
-    ms = None # magic mimeTypes
+    ms = None  # magic mimeTypes
 
-    def __init__(self,identifier,title,abstract=None,
-                metadata=[],type=None, asReference=False):
+    def __init__(self, identifier, title, abstract=None,
+                 metadata=[], type=None, asReference=False):
         """Class Constructor"""
         self.identifier = identifier
         self.title = title
@@ -812,9 +834,10 @@ class Output:
         self.value = None
         return
 
-    def setValue(self,value):
+    def setValue(self, value):
         """Set this output value"""
         self.value = value
+
 
 class LiteralOutput(Output):
     """Literal output class
@@ -831,12 +854,12 @@ class LiteralOutput(Output):
             reference or as file
     """
 
-    def __init__(self,identifier,title,abstract=None,
-                metadata=[], uoms=(), dataType = types.StringType,
-                default=None,asReference=False):
+    def __init__(self, identifier, title, abstract=None,
+                 metadata=[], uoms=(), dataType=types.StringType,
+                 default=None, asReference=False):
         """Class Constructor"""
-        Output.__init__(self,identifier,title,abstract=abstract,
-                metadata=metadata,type="LiteralValue",asReference=asReference)
+        Output.__init__(self, identifier, title, abstract=abstract,
+                        metadata=metadata, type="LiteralValue", asReference=asReference)
 
         self.uoms = uoms
         if len(self.uoms) > 0:
@@ -846,6 +869,7 @@ class LiteralOutput(Output):
         self.default = default
         self.dataType = dataType
         return
+
 
 class ComplexOutput(Output):
     """Complex value output
@@ -929,7 +953,7 @@ class ComplexOutput(Output):
         output consolidation.
     """
     formats = None
-    format = {"mimetype":None,"encoding":None,"schema":None}
+    format = {"mimetype": None, "encoding": None, "schema": None}
     projection = None
     bbox = None
     width = None
@@ -937,16 +961,16 @@ class ComplexOutput(Output):
     useMapscript = False
     useQgisServer = False
 
-    def __init__(self,identifier,title,abstract=None,
-                metadata=[], formats=[{"mimeType":None}],
-                asReference=False, projection=None, bbox=None,
-                useMapscript=False, useQgisServer=False):
+    def __init__(self, identifier, title, abstract=None,
+                 metadata=[], formats=[{"mimeType": None}],
+                 asReference=False, projection=None, bbox=None,
+                 useMapscript=False, useQgisServer=False):
         """Class constructor"""
-        Output.__init__(self,identifier,title,abstract=abstract,
-                metadata=metadata,type="ComplexValue", asReference=asReference)
+        Output.__init__(self, identifier, title, abstract=abstract,
+                        metadata=metadata, type="ComplexValue", asReference=asReference)
 
         if type(formats) == types.StringType:
-            formats = [{"mimeType":formats,"encoding":None,"schema":None}]
+            formats = [{"mimeType": formats, "encoding": None, "schema": None}]
         elif type(formats) == types.DictType:
             formats = [formats]
 
@@ -957,7 +981,7 @@ class ComplexOutput(Output):
                 format["schema"] = None
 
         self.formats = formats
-        self.format={}
+        self.format = {}
 
         self.projection = projection
         self.bbox = bbox
@@ -978,63 +1002,66 @@ class ComplexOutput(Output):
         :type value: string or file
         """
 
-        #Note: cStringIO and StringIO are totally messed up, StringIO is type instance, cString is type cStringIO.StringO
-        #Better to also use __class__.__name__ to be certain what is is
+        # Note: cStringIO and StringIO are totally messed up, StringIO is type instance, cString is type cStringIO.StringO
+        # Better to also use __class__.__name__ to be certain what is is
         # StringIO => StringIO but cStringIO => StringO
-        if type(value) == types.StringType or type(value)==types.UnicodeType:
+        if type(value) == types.StringType or type(value) == types.UnicodeType:
             self.value = value
         elif type(value) == types.FileType:
             self.value = value.name
-        elif value.__class__.__name__=='StringIO' or value.__class__.__name__=='StringO':
+        elif value.__class__.__name__ == 'StringIO' or value.__class__.__name__ == 'StringO':
             import tempfile
             from os import curdir
-            stringIOName = tempfile.mkstemp(prefix="pywpsOutput",dir=curdir) #(5, '/tmp/pywps-instanceS2j6ve/pywpsOutputZxSM6V')
-            stringIOName=stringIOName[1]
+            # (5, '/tmp/pywps-instanceS2j6ve/pywpsOutputZxSM6V')
+            stringIOName = tempfile.mkstemp(prefix="pywpsOutput", dir=curdir)
+            stringIOName = stringIOName[1]
 
-            stringIOFile=open(stringIOName,"w")
+            stringIOFile = open(stringIOName, "w")
             stringIOFile.write(value.getvalue())
             stringIOFile.close()
-            self.value=stringIOName
+            self.value = stringIOName
         # TODO add more types, like Arrays and lists for example
         else:
-            raise Exception("Output type '%s' of '%s' output not known, not FileName, File or (c)StringIO object" %\
-                    (type(value),self.identifier))
-
+            raise Exception("Output type '%s' of '%s' output not known, not FileName, File or (c)StringIO object" %
+                            (type(value), self.identifier))
 
     def checkMimeTypeIn(self):
-            #Checking the mimeType
+            # Checking the mimeType
             #-1)Easier to set the schema and utf if present then deal with mimetype
-            #0) check if format has mimetype key, if input request has no mimeType then the key will be missing
-            #1) If missing mimeType, pick the default one from list
-            #2) check if mimeType is in the output.formats list, if not raise exception
-            #3) if no mimeType and no outputs.formats then do nothin
-            #4) Adding schema and encondig passing for wps-grass-bridge
+            # 0) check if format has mimetype key, if input request has no mimeType then the key will be missing
+            # 1) If missing mimeType, pick the default one from list
+            # 2) check if mimeType is in the output.formats list, if not raise exception
+            # 3) if no mimeType and no outputs.formats then do nothin
+            # 4) Adding schema and encondig passing for wps-grass-bridge
         try:
-            if (self.format["schema"] is None) or (self.format["schema"]==""):
-                self.format["schema"]=self.formats[0]["schema"]
+            if (self.format["schema"] is None) or (self.format["schema"] == ""):
+                self.format["schema"] = self.formats[0]["schema"]
                 logging.debug("Adding schema: %s" % self.format["schema"])
-            if (self.format["encoding"] is None) or (self.format["schema"]==""):
-                self.format["encoding"]=self.formats[0]["encoding"]
+            if (self.format["encoding"] is None) or (self.format["schema"] == ""):
+                self.format["encoding"] = self.formats[0]["encoding"]
                 logging.debug("Adding encoding: %s" % self.format["encoding"])
         except:
             logging.debug("Adding schema and/or encoding failed, ")
 
-        if (self.format["mimetype"] is None) or (self.format["mimetype"]==""):
-                logging.debug("Missing ComplexDataOutput mimeType in %s, adopting default mimeType %s (first in formats list)" % (self.identifier,self.formats[0]["mimeType"]))
-                self.format["mimetype"]=self.formats[0]["mimeType"]
-                #wps-grass-bridge
+        if (self.format["mimetype"] is None) or (self.format["mimetype"] == ""):
+            logging.debug("Missing ComplexDataOutput mimeType in %s, adopting default mimeType %s (first in formats list)" % (
+                self.identifier, self.formats[0]["mimeType"]))
+            self.format["mimetype"] = self.formats[0]["mimeType"]
+            # wps-grass-bridge
         else:
-            #Checking is mimeType is in the acceptable formats
+            # Checking is mimeType is in the acceptable formats
             if self.format["mimetype"] not in [dic["mimeType"] for dic in self.formats]:
-                #ATTENTION: False positive if dictionary is not set in process/empty formats list
-                if (len(self.formats)==1) and (type(self.formats[0]["mimeType"])==types.NoneType):
-                    logging.debug("Process without mimetype list, cant check if ComplexDataOutput mimtype is correct or not")
+                # ATTENTION: False positive if dictionary is not set in
+                # process/empty formats list
+                if (len(self.formats) == 1) and (type(self.formats[0]["mimeType"]) == types.NoneType):
+                    logging.debug(
+                        "Process without mimetype list, cant check if ComplexDataOutput mimtype is correct or not")
                 else:
-                    logging.debug("ComplexDataOutputXML defines mimeType %s  which is not in process %s formats list" % (str(self.format["mimetype"]),str(self.identifier)))
-                    self.onProblem("InvalidParameterValue",self.identifier)
+                    logging.debug("ComplexDataOutputXML defines mimeType %s  which is not in process %s formats list" % (
+                        str(self.format["mimetype"]), str(self.identifier)))
+                    self.onProblem("InvalidParameterValue", self.identifier)
 
-
-    def onProblem(self,what, why):
+    def onProblem(self, what, why):
         """Empty method, called, when there was any problem with the input.
         This method is replaced in Execute.consolidateInputs, basically output.onProblem = self.onOutputProblem
         therefore Exception raise is implemented in Execute.onInputProblem()
@@ -1042,6 +1069,7 @@ class ComplexOutput(Output):
         :param why: Error code
        """
         pass
+
 
 class BoundingBoxOutput(Output):
     """Bounding box ouput
@@ -1073,11 +1101,11 @@ class BoundingBoxOutput(Output):
     dimensions = None
     value = None
 
-    def __init__(self,identifier,title,abstract=None,
-                metadata=[], crss=[], dimensions=None, asReference=False):
+    def __init__(self, identifier, title, abstract=None,
+                 metadata=[], crss=[], dimensions=None, asReference=False):
         """BoundingBox output"""
-        Output.__init__(self,identifier,title,abstract=abstract,
-                metadata=metadata,type="BoundingBoxValue",asReference=asReference)
+        Output.__init__(self, identifier, title, abstract=abstract,
+                        metadata=metadata, type="BoundingBoxValue", asReference=asReference)
         self.crss = crss
         self.crs = crss[0]
         self.dimensions = dimensions
@@ -1094,8 +1122,8 @@ class BoundingBoxOutput(Output):
         """
 
         if len(value) != 2:
-            raise Exception("Bounding box value is wrong, it has to have a form: "+
-                    "[[minx,miny],[maxx,maxy]]")
+            raise Exception("Bounding box value is wrong, it has to have a form: " +
+                            "[[minx,miny],[maxx,maxy]]")
 
         # from the object
         newval = None
@@ -1105,11 +1133,11 @@ class BoundingBoxOutput(Output):
         except:
             newvalue = value
 
-
         if type([]) in map(lambda x: type(x), newvalue):
             self.value = newvalue
         else:
             dimensions = int(len(newvalue))
             self.value = []
             for i in range(dimensions):
-                self.value.append(newvalue[i*dimensions,i*dimensions+dimensions])
+                self.value.append(
+                    newvalue[i * dimensions, i * dimensions + dimensions])

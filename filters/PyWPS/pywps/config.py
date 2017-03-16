@@ -5,11 +5,13 @@
     Configuration object
 """
 
-import os,sys
+import os
+import sys
 import pywps
 import ConfigParser
 
 config = None
+
 
 def getConfigValue(*args):
     """Get desired value from  configuration files
@@ -30,9 +32,10 @@ def getConfigValue(*args):
     # Convert Boolean string to real Boolean values
     if value.lower() == "false":
         value = False
-    elif value.lower() == "true" :
+    elif value.lower() == "true":
         value = True
     return value
+
 
 def setConfigValue(*args):
     """set desired value from  configuration files
@@ -46,7 +49,7 @@ def setConfigValue(*args):
     :returns: value found in the configuration file
     :rtype: string
     """
-    #Note this function is mainly used in the unnitest
+    # Note this function is mainly used in the unnitest
     #RawConfigParser.set(section, option, value)
     if not config:
         loadConfiguration()
@@ -54,7 +57,6 @@ def setConfigValue(*args):
     value = config.set(*args)
 
     # Convert Boolean string to real Boolean values
-
 
 
 def loadConfiguration(cfgfiles=None):
@@ -75,7 +77,8 @@ def loadConfiguration(cfgfiles=None):
 
     config = ConfigParser.ConfigParser()
     config.read(cfgfiles)
-   
+
+
 def _getDefaultConfigFilesLocation():
     """Get the locations of the standard configuration files. This are
 
@@ -88,7 +91,7 @@ def _getDefaultConfigFilesLocation():
     Windows:
         1. `pywps\\default.cfg`
         2. `pywps\\etc\\default.cfg`
-    
+
     Both:
         1. `$PYWPS_CFG environment variable`
 
@@ -101,29 +104,32 @@ def _getDefaultConfigFilesLocation():
 
         # Windows or Unix
         if sys.platform == 'win32':
-            PYWPS_INSTALL_DIR = os.path.abspath(os.path.join(os.getcwd(), os.path.dirname(sys.argv[0])))
-            cfgfiles = (os.path.join(PYWPS_INSTALL_DIR,"pywps","default.cfg"),
-                    os.getenv("PYWPS_CFG"))
+            PYWPS_INSTALL_DIR = os.path.abspath(os.path.join(
+                os.getcwd(), os.path.dirname(sys.argv[0])))
+            cfgfiles = (os.path.join(PYWPS_INSTALL_DIR, "pywps", "default.cfg"),
+                        os.getenv("PYWPS_CFG"))
         else:
-            cfgfiles = (os.path.join(pywps.__path__[0],"default.cfg"),
-                    os.getenv("PYWPS_CFG"))
+            cfgfiles = (os.path.join(pywps.__path__[0], "default.cfg"),
+                        os.getenv("PYWPS_CFG"))
 
     # try to eastimate the default location
     else:
         # Windows or Unix
         if sys.platform == 'win32':
-            PYWPS_INSTALL_DIR = os.path.abspath(os.path.join(os.getcwd(), os.path.dirname(sys.argv[0])))
-            cfgfiles = (os.path.join(PYWPS_INSTALL_DIR,"pywps","default.cfg"),
-                    os.path.join(PYWPS_INSTALL_DIR, "pywps","etc","pywps.cfg"))
+            PYWPS_INSTALL_DIR = os.path.abspath(os.path.join(
+                os.getcwd(), os.path.dirname(sys.argv[0])))
+            cfgfiles = (os.path.join(PYWPS_INSTALL_DIR, "pywps", "default.cfg"),
+                        os.path.join(PYWPS_INSTALL_DIR, "pywps", "etc", "pywps.cfg"))
         else:
             homePath = os.getenv("HOME")
             if homePath:
-                cfgfiles = (os.path.join(pywps.__path__[0],"default.cfg"),
-                        os.path.join(pywps.__path__[0],"etc", "pywps.cfg"), "/etc/pywps.cfg",
-                    os.path.join(os.getenv("HOME"),".pywps.cfg" ))
-            else: 
-                cfgfiles = (os.path.join(pywps.__path__[0],"default.cfg"),
-                        os.path.join(pywps.__path__[0],"etc",
-                            "pywps.cfg"), "/etc/pywps.cfg")
+                cfgfiles = (os.path.join(pywps.__path__[0], "default.cfg"),
+                            os.path.join(pywps.__path__[
+                                         0], "etc", "pywps.cfg"), "/etc/pywps.cfg",
+                            os.path.join(os.getenv("HOME"), ".pywps.cfg"))
+            else:
+                cfgfiles = (os.path.join(pywps.__path__[0], "default.cfg"),
+                            os.path.join(pywps.__path__[0], "etc",
+                                         "pywps.cfg"), "/etc/pywps.cfg")
 
     return cfgfiles

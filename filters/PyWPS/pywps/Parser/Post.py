@@ -21,24 +21,27 @@ Post
 #
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+# 02110-1301  USA
 
-import types,sys
+import types
+import sys
 import xml
 from xml.dom.minidom import parseString
 import pywps
 from pywps.Parser import Parser
 from pywps.Process.Lang import Lang
-from pywps import Soap 
+from pywps import Soap
 from os import name as OSNAME
+
 
 class Post(Parser):
     """Main class for parsing of HTTP POST request types
-    
+
     .. attribute:: document
-    
+
         DOM of input document
-    
+
     .. attribute:: requestParser
 
         :class:`pywps.Parser.GetCapabilities`, :class:`pywps.Parser.DescribeProcess` 
@@ -46,17 +49,17 @@ class Post(Parser):
 
     """
 
-    document = None # Document Object Model
+    document = None  # Document Object Model
     requestParser = None
 
     GET_CAPABILITIES = "GetCapabilities"
     DESCRIBE_PROCESS = "DescribeProcess"
     EXECUTE = "Execute"
 
-    def __init__(self,wps):
-        Parser.__init__(self,wps)
+    def __init__(self, wps):
+        Parser.__init__(self, wps)
 
-    def parse(self,file):
+    def parse(self, file):
         """Parse parameters stored as XML file
 
         :param file: input file object or class:`java.io.BufferedReader`
@@ -68,11 +71,11 @@ class Post(Parser):
 
         # get the maximal input file size from configuration
         maxFileSize = self.getMaxFileSize(
-                pywps.config.getConfigValue("server","maxFileSize").lower())
+            pywps.config.getConfigValue("server", "maxFileSize").lower())
 
         # read the document
         if OSNAME == "java" and\
-            type(file) != types.FileType:
+                type(file) != types.FileType:
             inputXml = ""
             while 1:
                 line = file.readLine()
@@ -80,14 +83,14 @@ class Post(Parser):
                     break
                 inputXml += line
                 # TODO:
-                #if maxFileSize > 0 and\
+                # if maxFileSize > 0 and\
                 #    inputXml.__sizeof__() > maxFileSize:
                 #    raise pywps.FileSizeExceeded()
             # make DOM from XML
             import org.xml.sax.SAXException
             try:
                 self.document = parseString(inputXml)
-            except org.xml.sax.SAXException,e:
+            except org.xml.sax.SAXException, e:
                 raise pywps.NoApplicableCode(e.message)
         else:
             if maxFileSize > 0:
@@ -100,9 +103,8 @@ class Post(Parser):
             # make DOM from XML
             try:
                 self.document = parseString(inputXml)
-            except xml.parsers.expat.ExpatError,e:
+            except xml.parsers.expat.ExpatError, e:
                 raise pywps.NoApplicableCode(e.message)
-        
 
         # get first child
         firstChild = self.isSoapFirstChild(self.document)
@@ -120,14 +122,15 @@ class Post(Parser):
 
     def checkService(self, node):
         """Check mandatory service name parameter.  
-        
+
         :param node: :class:`xml.dom.Node`, where to search
         """
 
         # service name is mandatory for all requests (OWS_1-1-0 p.14 tab.3 +
-        # p.46 tab.26); service must be "WPS" (WPS_1-0-0 p.17 tab.13 + p.32 tab.39)
+        # p.46 tab.26); service must be "WPS" (WPS_1-0-0 p.17 tab.13 + p.32
+        # tab.39)
         if node.hasAttribute("service"):
-            value=node.getAttribute("service").upper()
+            value = node.getAttribute("service").upper()
             if value != "WPS":
                 raise pywps.InvalidParameterValue("service")
             else:
@@ -139,7 +142,7 @@ class Post(Parser):
         """ Check optional language parameter.  """
 
         if node.hasAttribute("language"):
-            value=Lang.getCode(node.getAttribute("language").lower())
+            value = Lang.getCode(node.getAttribute("language").lower())
             if value not in self.wps.languages:
                 raise pywps.InvalidParameterValue("language")
             else:
@@ -151,10 +154,10 @@ class Post(Parser):
         """ Check optional language parameter.  """
 
         if node.hasAttribute("version"):
-            value=node.getAttribute("version")
+            value = node.getAttribute("version")
             if value not in self.wps.versions:
                 raise pywps.VersionNegotiationFailed(
-                    'The requested version "' + value + \
+                    'The requested version "' + value +
                     '" is not supported by this server.')
             else:
                 self.inputs["version"] = value
@@ -181,7 +184,7 @@ class Post(Parser):
         else:
             raise self.wps.Exceptions.InvalidParameterValue("request")
 
-    def getFirstChildNode(self,document):
+    def getFirstChildNode(self, document):
         """Find first usable child node of the document (no comments)"""
 
         node = None
@@ -192,10 +195,10 @@ class Post(Parser):
                 firstChild = node
         if firstChild == None:
             raise pywps.NoApplicableCode(
-                                        "No root Element found!")
+                "No root Element found!")
         return firstChild
 
-    def getMaxFileSize(self,maxFileSize):
+    def getMaxFileSize(self, maxFileSize):
         """ Convert given filesize string to number of bytes.
 
         This is used mainly for the parsing of the value from the
@@ -205,20 +208,20 @@ class Post(Parser):
 
         if maxFileSize.find("kb") > 0:
             maxFileSize = float(maxFileSize[:maxFileSize.find("kb")])
-            maxFileSize = int(maxFileSize*1024)
+            maxFileSize = int(maxFileSize * 1024)
         elif maxFileSize.find("mb") > 0:
             maxFileSize = float(maxFileSize[:maxFileSize.find("mb")])
-            maxFileSize = int(maxFileSize*1024*1024)
+            maxFileSize = int(maxFileSize * 1024 * 1024)
         elif maxFileSize.find("gb") > 0:
             maxFileSize = float(maxFileSize[:maxFileSize.find("gb")])
-            maxFileSize = int(maxFileSize*1024*1024*1024)
+            maxFileSize = int(maxFileSize * 1024 * 1024 * 1024)
         elif maxFileSize.find("b") > 0:
             maxFileSize = int(maxFileSize[:maxFileSize.find("b")])
         else:
             maxFileSize = int(maxFileSize)
         return maxFileSize
 
-    def isSoapFirstChild(self,document):
+    def isSoapFirstChild(self, document):
         """Return first child of the document, if it is SOAP request,
         return first child of the body envelope
 
@@ -230,9 +233,9 @@ class Post(Parser):
         if Soap.isSoap(firstChild):
             self.isSoap = True
             soapCls = Soap.SOAP(firstChild)
-            self.soapVersion=soapCls.getSOAPVersion()
-            firstChild=soapCls.getWPSContent()
-           
-            self.isSoapExecute=soapCls.getSoapExecute()
-         
+            self.soapVersion = soapCls.getSOAPVersion()
+            firstChild = soapCls.getWPSContent()
+
+            self.isSoapExecute = soapCls.getSoapExecute()
+
         return firstChild
