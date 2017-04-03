@@ -855,273 +855,324 @@ class wpsFilter(QgsServerFilter):
         service = params.get('SERVICE', '')
         # pdb.set_trace()
         if service and service.upper() == 'WPS':
-            # prepare query
-            inputQuery = '&'.join(["%s=%s" % (k, params[k]) for k in params if k.lower(
-            ) != 'map' and k.lower() != 'config' and k.lower != 'request_body'])
-            request_body = params.get('REQUEST_BODY', '')
+            if params.get('REQUEST', '').upper() == 'GETSCHEMA':
+                self.processGetSchema(request, params)
+            else:
+                self.processWpsRequest(request, params)
 
-            # get config
-            configPath = os.getenv("PYWPS_CFG")
-            if not configPath and 'config' in params:
-                configPath = params['config']
-            elif not configPath and 'CONFIG' in params:
-                configPath = params['CONFIG']
-            QgsMessageLog.logMessage("configPath " + str(configPath))
+    def processGetSchema(self, request, params):
+        outputformat = params.get('OUTPUTFORMAT', '').upper()
+        if outputformat not in ('XMLSCHEMA', 'JSON'):
+            return
 
-            if configPath:
-                os.environ["PYWPS_CFG"] = configPath
-            pywpsConfig.loadConfiguration()
+        geometryname = params.get('GEOMETRYNAME', '').upper()
 
-            try:
-                providerList = ''
-                algList = ''
-                algsFilter = ''
-                if pywpsConfig.config.has_section('qgis'):
-                    # get the providers to publish
-                    if pywpsConfig.config.has_option('qgis', 'providers'):
-                        providerList = pywpsConfig.getConfigValue(
-                            'qgis', 'providers')
-                        if providerList:
-                            providerList = providerList.split(',')
-                    # get the algorithm list to publish
-                    if pywpsConfig.config.has_option('qgis', 'algs'):
-                        algList = pywpsConfig.getConfigValue('qgis', 'algs')
-                        if algList:
-                            algList = algList.split(',')
-                    # get the algorithm filter
-                    if pywpsConfig.config.has_option('qgis', 'algs_filter'):
-                        algsFilter = pywpsConfig.getConfigValue(
-                            'qgis', 'algs_filter')
+        infoformat = 'text/plain'
+        spath = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'schemas')
+        if outputformat == 'XMLSCHEMA':
+            infoformat = 'text/xml; subtype=gml/2.1.2'
+            spath = os.path.join(spath, 'gml')
+            spath = os.path.join(spath, '2.1.2')
+            if geometryname == 'POINT':
+                spath = os.path.join(spath, 'feature-point.xsd')
+            elif geometryname == 'LINE':
+                spath = os.path.join(spath, 'feature-line.xsd')
+            elif geometryname == 'POLYGON':
+                spath = os.path.join(spath, 'feature-polygon.xsd')
+            else:
+                spath = os.path.join(spath, 'feature.xsd')
+        elif outputformat == 'JSON':
+            infoformat = 'application/json'
+            spath = os.path.join(spath, 'geojson')
+            if geometryname == 'POINT':
+                spath = os.path.join(spath, 'schema-geojson-point.json')
+            elif geometryname == 'LINE':
+                spath = os.path.join(spath, 'schema-geojson-line.json')
+            elif geometryname == 'POLYGON':
+                spath = os.path.join(spath, 'schema-geojson-polygon.json')
+            else:
+                spath = os.path.join(spath, 'schema-geojson.json')
 
-                # init Processing
-                Processing.initialize()
-                # load QGIS Processing config
-                if pywpsConfig.config.has_section('qgis_processing'):
-                    for opt in pywpsConfig.config.options('qgis_processing'):
-                        opt_val = pywpsConfig.getConfigValue(
-                            'qgis_processing', opt)
-                        ProcessingConfig.setSettingValue(opt.upper(), opt_val)
+        if not os.path.exists(spath):
+            return
+
+        read_data = ''
+        with open(spath, 'r') as f:
+            read_data = f.read()
+
+        request.clearHeaders()
+        request.clearBody()
+        request.setInfoFormat(infoformat)
+        request.appendBody(read_data)
+
+    def processWpsRequest(self, request, params):
+        # prepare query
+        inputQuery = '&'.join(["%s=%s" % (k, params[k]) for k in params if k.lower(
+        ) != 'map' and k.lower() != 'config' and k.lower != 'request_body'])
+        request_body = params.get('REQUEST_BODY', '')
+
+        # get config
+        configPath = os.getenv("PYWPS_CFG")
+        if not configPath and 'config' in params:
+            configPath = params['config']
+        elif not configPath and 'CONFIG' in params:
+            configPath = params['CONFIG']
+        QgsMessageLog.logMessage("configPath " + str(configPath))
+
+        if configPath:
+            os.environ["PYWPS_CFG"] = configPath
+        pywpsConfig.loadConfiguration()
+
+        try:
+            providerList = ''
+            algList = ''
+            algsFilter = ''
+            if pywpsConfig.config.has_section('qgis'):
+                # get the providers to publish
+                if pywpsConfig.config.has_option('qgis', 'providers'):
+                    providerList = pywpsConfig.getConfigValue(
+                        'qgis', 'providers')
+                    if providerList:
+                        providerList = providerList.split(',')
+                # get the algorithm list to publish
+                if pywpsConfig.config.has_option('qgis', 'algs'):
+                    algList = pywpsConfig.getConfigValue('qgis', 'algs')
+                    if algList:
+                        algList = algList.split(',')
+                # get the algorithm filter
+                if pywpsConfig.config.has_option('qgis', 'algs_filter'):
+                    algsFilter = pywpsConfig.getConfigValue(
+                        'qgis', 'algs_filter')
+
+            # init Processing
+            Processing.initialize()
+            # load QGIS Processing config
+            if pywpsConfig.config.has_section('qgis_processing'):
+                for opt in pywpsConfig.config.options('qgis_processing'):
+                    opt_val = pywpsConfig.getConfigValue(
+                        'qgis_processing', opt)
+                    ProcessingConfig.setSettingValue(opt.upper(), opt_val)
+                # Reload algorithms
+                Processing.updateAlgsList()
+            # modify processes path and reload algorithms
+            if pywpsConfig.config.has_section('qgis') and pywpsConfig.config.has_option('qgis', 'processing_folder'):
+                processingPath = pywpsConfig.getConfigValue(
+                    'qgis', 'processing_folder')
+                if not os.path.exists(processingPath):
+                    if configPath and os.path.exists(configPath):
+                        processingPath = os.path.join(
+                            os.path.dirname(configPath),
+                            processingPath
+                        )
+                        processingPath = os.path.abspath(processingPath)
+                    else:
+                        configFilesLocation = pywpsConfig._getDefaultConfigFilesLocation()
+                        for configFileLocation in configFilesLocation:
+                            if os.path.exists(configFileLocation):
+                                processingPath = os.path.join(
+                                    os.path.dirname(configFileLocation),
+                                    processingPath
+                                )
+                                processingPath = os.path.abspath(
+                                    processingPath)
+                QgsMessageLog.logMessage(
+                    "processing_folder: " + processingPath)
+                if os.path.exists(processingPath) and os.path.isdir(processingPath):
+                    ProcessingConfig.setSettingValue(
+                        'MODELS_FOLDER', os.path.join(processingPath, 'models'))
+                    ProcessingConfig.setSettingValue(
+                        'SCRIPTS_FOLDER', os.path.join(processingPath, 'scripts'))
+                    ProcessingConfig.setSettingValue(
+                        'R_SCRIPTS_FOLDER', os.path.join(processingPath, 'rscripts'))
                     # Reload algorithms
                     Processing.updateAlgsList()
-                # modify processes path and reload algorithms
-                if pywpsConfig.config.has_section('qgis') and pywpsConfig.config.has_option('qgis', 'processing_folder'):
-                    processingPath = pywpsConfig.getConfigValue(
-                        'qgis', 'processing_folder')
-                    if not os.path.exists(processingPath):
-                        if configPath and os.path.exists(configPath):
-                            processingPath = os.path.join(
-                                os.path.dirname(configPath),
-                                processingPath
-                            )
-                            processingPath = os.path.abspath(processingPath)
-                        else:
-                            configFilesLocation = pywpsConfig._getDefaultConfigFilesLocation()
-                            for configFileLocation in configFilesLocation:
-                                if os.path.exists(configFileLocation):
-                                    processingPath = os.path.join(
-                                        os.path.dirname(configFileLocation),
-                                        processingPath
-                                    )
-                                    processingPath = os.path.abspath(
-                                        processingPath)
-                    QgsMessageLog.logMessage(
-                        "processing_folder: " + processingPath)
-                    if os.path.exists(processingPath) and os.path.isdir(processingPath):
-                        ProcessingConfig.setSettingValue(
-                            'MODELS_FOLDER', os.path.join(processingPath, 'models'))
-                        ProcessingConfig.setSettingValue(
-                            'SCRIPTS_FOLDER', os.path.join(processingPath, 'scripts'))
-                        ProcessingConfig.setSettingValue(
-                            'R_SCRIPTS_FOLDER', os.path.join(processingPath, 'rscripts'))
-                        # Reload algorithms
-                        Processing.updateAlgsList()
 
-                crsList = []
-                if pywpsConfig.config.has_section('qgis') and pywpsConfig.config.has_option('qgis', 'input_bbox_crss'):
-                    inputBBoxCRSs = pywpsConfig.getConfigValue(
-                        'qgis', 'input_bbox_crss')
-                    inputBBoxCRSs = inputBBoxCRSs.split(',')
-                    crsList = [proj.strip().upper() for proj in inputBBoxCRSs]
+            crsList = []
+            if pywpsConfig.config.has_section('qgis') and pywpsConfig.config.has_option('qgis', 'input_bbox_crss'):
+                inputBBoxCRSs = pywpsConfig.getConfigValue(
+                    'qgis', 'input_bbox_crss')
+                inputBBoxCRSs = inputBBoxCRSs.split(',')
+                crsList = [proj.strip().upper() for proj in inputBBoxCRSs]
 
-                # get QGIS project path
-                projectPath = os.getenv("QGIS_PROJECT_FILE")
-                if not projectPath and 'map' in params:
-                    projectPath = params['map']
-                elif not projectPath and 'MAP' in params:
-                    projectPath = params['MAP']
-                # projectFolder
-                projectFolder = ''
-                if projectPath and os.path.exists(projectPath):
-                    projectFolder = os.path.dirname(projectPath)
-                QgsMessageLog.logMessage("projectPath " + str(projectPath))
+            # get QGIS project path
+            projectPath = os.getenv("QGIS_PROJECT_FILE")
+            if not projectPath and 'map' in params:
+                projectPath = params['map']
+            elif not projectPath and 'MAP' in params:
+                projectPath = params['MAP']
+            # projectFolder
+            projectFolder = ''
+            if projectPath and os.path.exists(projectPath):
+                projectFolder = os.path.dirname(projectPath)
+            QgsMessageLog.logMessage("projectPath " + str(projectPath))
 
-                rasterLayers = []
-                vectorLayers = []
+            rasterLayers = []
+            vectorLayers = []
 
-                if projectPath and os.path.exists(projectPath):
-                    p_dom = minidom.parse(projectPath)
-                    for ml in p_dom.getElementsByTagName('maplayer'):
-                        l = {'type': ml.attributes["type"].value,
-                             'name': ml.getElementsByTagName('layername')[0].childNodes[0].data,
-                             'datasource': ml.getElementsByTagName('datasource')[0].childNodes[0].data,
-                             'provider': ml.getElementsByTagName('provider')[0].childNodes[0].data,
-                             'crs': ml.getElementsByTagName('srs')[0].getElementsByTagName('authid')[0].childNodes[0].data,
-                             'proj4': ml.getElementsByTagName('srs')[0].getElementsByTagName('proj4')[0].childNodes[0].data
-                             }
-                        # Update relative path
-                        if l['provider'] in ['ogr', 'gdal'] and str(l['datasource']).startswith('.'):
-                            l['datasource'] = os.path.abspath(
-                                os.path.join(projectFolder, l['datasource']))
-                            if not os.path.exists(l['datasource']):
-                                continue
-                        elif l['provider'] in ['gdal'] and str(l['datasource']).startswith('NETCDF:'):
-                            theURIParts = l['datasource'].split(":")
-                            src = theURIParts[1]
-                            src = src.replace('"', '')
-                            if src.startswith('.'):
-                                src = os.path.abspath(
-                                    os.path.join(projectFolder, src))
-                            theURIParts[1] = '"' + src + '"'
-                            l['datasource'] = ':'.join(theURIParts)
+            if projectPath and os.path.exists(projectPath):
+                p_dom = minidom.parse(projectPath)
+                for ml in p_dom.getElementsByTagName('maplayer'):
+                    l = {'type': ml.attributes["type"].value,
+                         'name': ml.getElementsByTagName('layername')[0].childNodes[0].data,
+                         'datasource': ml.getElementsByTagName('datasource')[0].childNodes[0].data,
+                         'provider': ml.getElementsByTagName('provider')[0].childNodes[0].data,
+                         'crs': ml.getElementsByTagName('srs')[0].getElementsByTagName('authid')[0].childNodes[0].data,
+                         'proj4': ml.getElementsByTagName('srs')[0].getElementsByTagName('proj4')[0].childNodes[0].data
+                         }
+                    # Update relative path
+                    if l['provider'] in ['ogr', 'gdal'] and str(l['datasource']).startswith('.'):
+                        l['datasource'] = os.path.abspath(
+                            os.path.join(projectFolder, l['datasource']))
+                        if not os.path.exists(l['datasource']):
+                            continue
+                    elif l['provider'] in ['gdal'] and str(l['datasource']).startswith('NETCDF:'):
+                        theURIParts = l['datasource'].split(":")
+                        src = theURIParts[1]
+                        src = src.replace('"', '')
+                        if src.startswith('.'):
+                            src = os.path.abspath(
+                                os.path.join(projectFolder, src))
+                        theURIParts[1] = '"' + src + '"'
+                        l['datasource'] = ':'.join(theURIParts)
 
-                        if l['type'] == "raster":
-                            rasterLayers.append(l)
-                        elif l['type'] == "vector":
-                            l['geometry'] = ml.attributes["geometry"].value
-                            vectorLayers.append(l)
+                    if l['type'] == "raster":
+                        rasterLayers.append(l)
+                    elif l['type'] == "vector":
+                        l['geometry'] = ml.attributes["geometry"].value
+                        vectorLayers.append(l)
 
-                    defaultCrs = ''
-                    for mapcanvas in p_dom.getElementsByTagName('mapcanvas'):
-                        for destinationsrs in mapcanvas.getElementsByTagName('destinationsrs'):
-                            for authid in destinationsrs.getElementsByTagName('authid'):
-                                defaultCrs = authid.childNodes[0].data
-                                crsList.append(defaultCrs)
-                    for wmsCrsList in p_dom.getElementsByTagName('WMSCrsList'):
-                        for wmsCrs in wmsCrsList.getElementsByTagName('value'):
-                            wmsCrsValue = wmsCrs.childNodes[0].data
-                            if wmsCrsValue and wmsCrsValue != defaultCrs:
-                                crsList.append(wmsCrsValue)
+                defaultCrs = ''
+                for mapcanvas in p_dom.getElementsByTagName('mapcanvas'):
+                    for destinationsrs in mapcanvas.getElementsByTagName('destinationsrs'):
+                        for authid in destinationsrs.getElementsByTagName('authid'):
+                            defaultCrs = authid.childNodes[0].data
+                            crsList.append(defaultCrs)
+                for wmsCrsList in p_dom.getElementsByTagName('WMSCrsList'):
+                    for wmsCrs in wmsCrsList.getElementsByTagName('value'):
+                        wmsCrsValue = wmsCrs.childNodes[0].data
+                        if wmsCrsValue and wmsCrsValue != defaultCrs:
+                            crsList.append(wmsCrsValue)
 
-                # if no processes found no processes return (deactivate default
-                # pywps process)
-                processes = [None]
-                identifier = params.get('IDENTIFIER', '').lower()
-                for i in get_processing_algs():
-                    if providerList and i not in providerList:
+            # if no processes found no processes return (deactivate default
+            # pywps process)
+            processes = [None]
+            identifier = params.get('IDENTIFIER', '').lower()
+            for i in get_processing_algs():
+                if providerList and i not in providerList:
+                    continue
+                QgsMessageLog.logMessage(
+                    "provider " + i + " " + str(len(get_processing_algs()[i])))
+                for m in get_processing_algs()[i]:
+                    if identifier and identifier != m:
                         continue
-                    QgsMessageLog.logMessage(
-                        "provider " + i + " " + str(len(get_processing_algs()[i])))
-                    for m in get_processing_algs()[i]:
-                        if identifier and identifier != m:
+                    if algList and m not in algList:
+                        continue
+                    if algsFilter:
+                        alg = Processing.getAlgorithm(m)
+                        if algsFilter.lower() not in alg.name.lower() and algsFilter.lower() not in m.lower():
                             continue
-                        if algList and m not in algList:
-                            continue
-                        if algsFilter:
-                            alg = Processing.getAlgorithm(m)
-                            if algsFilter.lower() not in alg.name.lower() and algsFilter.lower() not in m.lower():
-                                continue
-                        QgsMessageLog.logMessage("provider " + i + " " + m)
-                        processes.append(QGISProcessFactory(
-                            m, projectPath, vectorLayers, rasterLayers, crsList))
+                    QgsMessageLog.logMessage("provider " + i + " " + m)
+                    processes.append(QGISProcessFactory(
+                        m, projectPath, vectorLayers, rasterLayers, crsList))
 
-                #pywpsConfig.setConfigValue("server","outputPath", '/tmp/wpsoutputs')
-                #pywpsConfig.setConfigValue("server","logFile", '/tmp/pywps.log')
-                qgisaddress = get_qgis_server_address()
-                qgisaddress = qgisaddress + '?'
-                if 'map' in params:
-                    qgisaddress = qgisaddress + 'map=' + params['map'] + '&'
-                elif 'MAP' in params:
-                    qgisaddress = qgisaddress + 'MAP=' + params['MAP'] + '&'
-                if 'config' in params:
-                    qgisaddress = qgisaddress + \
-                        'config=' + params['config'] + '&'
-                elif 'CONFIG' in params:
-                    qgisaddress = qgisaddress + \
-                        'CONFIG=' + params['CONFIG'] + '&'
-                #pywpsConfig.setConfigValue("wps","serveraddress", qgisaddress)
-                QgsMessageLog.logMessage("qgisaddress " + qgisaddress)
-                #pywpsConfig.setConfigValue("qgis","qgisserveraddress", qgisaddress)
+            #pywpsConfig.setConfigValue("server","outputPath", '/tmp/wpsoutputs')
+            #pywpsConfig.setConfigValue("server","logFile", '/tmp/pywps.log')
+            qgisaddress = get_qgis_server_address()
+            qgisaddress = qgisaddress + '?'
+            if 'map' in params:
+                qgisaddress = qgisaddress + 'map=' + params['map'] + '&'
+            elif 'MAP' in params:
+                qgisaddress = qgisaddress + 'MAP=' + params['MAP'] + '&'
+            if 'config' in params:
+                qgisaddress = qgisaddress + \
+                    'config=' + params['config'] + '&'
+            elif 'CONFIG' in params:
+                qgisaddress = qgisaddress + \
+                    'CONFIG=' + params['CONFIG'] + '&'
+            #pywpsConfig.setConfigValue("wps","serveraddress", qgisaddress)
+            QgsMessageLog.logMessage("qgisaddress " + qgisaddress)
+            #pywpsConfig.setConfigValue("qgis","qgisserveraddress", qgisaddress)
 
-                # init wps
-                method = 'GET'
-                if request_body:
-                    method = 'POST'
-                QgsMessageLog.logMessage("method " + method)
-                root = logging.getLogger()
-                if root.handlers:
-                    for handler in root.handlers:
-                        root.removeHandler(handler)
-                wps = pywps.Pywps(method)
-                logging.info("method " + method)
+            # init wps
+            method = 'GET'
+            if request_body:
+                method = 'POST'
+            QgsMessageLog.logMessage("method " + method)
+            root = logging.getLogger()
+            if root.handlers:
+                for handler in root.handlers:
+                    root.removeHandler(handler)
+            wps = pywps.Pywps(method)
+            logging.info("method " + method)
 
-                # create the request file for POST request
-                if request_body:
-                    tmpPath = pywpsConfig.getConfigValue("server", "tempPath")
-                    requestFile = open(os.path.join(
-                        tmpPath, "request-" + str(wps.UUID)), "w")
-                    requestFile.write(str(request_body))
-                    requestFile.close()
-                    requestFile = open(os.path.join(
-                        tmpPath, "request-" + str(wps.UUID)), "r")
-                    inputQuery = requestFile
+            # create the request file for POST request
+            if request_body:
+                tmpPath = pywpsConfig.getConfigValue("server", "tempPath")
+                requestFile = open(os.path.join(
+                    tmpPath, "request-" + str(wps.UUID)), "w")
+                requestFile.write(str(request_body))
+                requestFile.close()
+                requestFile = open(os.path.join(
+                    tmpPath, "request-" + str(wps.UUID)), "r")
+                inputQuery = requestFile
 
-                if wps.parseRequest(inputQuery):
-                    try:
-                        response = wps.performRequest(processes=processes)
-                        if response:
-                            request.clearHeaders()
-                            request.clearBody()
-                            #request.setHeader('Content-type', 'text/xml')
-                            QgsMessageLog.logMessage(
-                                "contentType " + wps.request.contentType)
-                            request.setInfoFormat(wps.request.contentType)
-                            resp = wps.response
-                            if not pywpsConfig.getConfigValue("wps", "serveraddress") and wps.request.contentType == 'application/xml':
-                                import re
-                                import xml.sax.saxutils as saxutils
-                                resp = re.sub(
-                                    r'Get xlink:href=".*"', 'Get xlink:href="' + saxutils.escape(qgisaddress) + '"', resp)
-                                resp = re.sub(
-                                    r'Post xlink:href=".*"', 'Post xlink:href="' + saxutils.escape(qgisaddress) + '"', resp)
-                            elif pywpsConfig.getConfigValue("wps", "serveraddress") and wps.request.contentType == 'application/xml':
-                                import re
-                                m = re.search(r'Get xlink:href="(.*)"', resp)
-                                if m and m.group(1).count('?') == 2:
-                                    import xml.sax.saxutils as saxutils
-                                    resp = re.sub(r'Get xlink:href=".*"', 'Get xlink:href="' + m.group(1)[
-                                                  :-1] + saxutils.escape('&') + '"', resp)
-                            # test response type
-                            if isinstance(resp, file):
-                                resp = resp.read()
-                            request.appendBody(resp)
-                            # Debug output useful for development
-                            # QgsMessageLog.logMessage(
-                            #    "WPS Response:\n%s" % resp)
-                        else:
-                            QgsMessageLog.logMessage("No response")
-                    except Exception as e:
-                        exc_type, exc_value, exc_traceback = sys.exc_info()
-                        QgsMessageLog.logMessage("Exception: %s\n%s" % (
-                            e,
-                            ''.join(traceback.format_tb(exc_traceback)) + str(e)))
+            if wps.parseRequest(inputQuery):
+                try:
+                    response = wps.performRequest(processes=processes)
+                    if response:
+                        request.clearHeaders()
+                        request.clearBody()
+                        #request.setHeader('Content-type', 'text/xml')
                         QgsMessageLog.logMessage(
-                            "Exception performing request")
-                else:
-                    QgsMessageLog.logMessage("parseRequest False")
-            except WPSException as e:
-                QgsMessageLog.logMessage("WPSException: " + str(e))
-                request.clearHeaders()
-                #request.setHeader('Content-type', 'text/xml')
-                request.clearBody()
-                request.setInfoFormat('text/xml')
-                request.appendBody(str(e))
-            except Exception as e:
-                exc_type, exc_value, exc_traceback = sys.exc_info()
-                QgsMessageLog.logMessage("Exception: %s\n%s" % (
-                    e,
-                    ''.join(traceback.format_tb(exc_traceback)) + str(e)))
-                request.clearHeaders()
-                #request.setHeader('Content-type', 'text/xml')
-                request.clearBody()
-                request.setInfoFormat('text/xml')
-                request.appendBody(str(e))
+                            "contentType " + wps.request.contentType)
+                        request.setInfoFormat(wps.request.contentType)
+                        resp = wps.response
+                        if not pywpsConfig.getConfigValue("wps", "serveraddress") and wps.request.contentType == 'application/xml':
+                            import re
+                            import xml.sax.saxutils as saxutils
+                            resp = re.sub(
+                                r'Get xlink:href=".*"', 'Get xlink:href="' + saxutils.escape(qgisaddress) + '"', resp)
+                            resp = re.sub(
+                                r'Post xlink:href=".*"', 'Post xlink:href="' + saxutils.escape(qgisaddress) + '"', resp)
+                        elif pywpsConfig.getConfigValue("wps", "serveraddress") and wps.request.contentType == 'application/xml':
+                            import re
+                            m = re.search(r'Get xlink:href="(.*)"', resp)
+                            if m and m.group(1).count('?') == 2:
+                                import xml.sax.saxutils as saxutils
+                                resp = re.sub(r'Get xlink:href=".*"', 'Get xlink:href="' + m.group(1)[
+                                              :-1] + saxutils.escape('&') + '"', resp)
+                        # test response type
+                        if isinstance(resp, file):
+                            resp = resp.read()
+                        request.appendBody(resp)
+                        # Debug output useful for development
+                        # QgsMessageLog.logMessage(
+                        #    "WPS Response:\n%s" % resp)
+                    else:
+                        QgsMessageLog.logMessage("No response")
+                except Exception as e:
+                    exc_type, exc_value, exc_traceback = sys.exc_info()
+                    QgsMessageLog.logMessage("Exception: %s\n%s" % (
+                        e,
+                        ''.join(traceback.format_tb(exc_traceback)) + str(e)))
+                    QgsMessageLog.logMessage(
+                        "Exception performing request")
+            else:
+                QgsMessageLog.logMessage("parseRequest False")
+        except WPSException as e:
+            QgsMessageLog.logMessage("WPSException: " + str(e))
+            request.clearHeaders()
+            #request.setHeader('Content-type', 'text/xml')
+            request.clearBody()
+            request.setInfoFormat('text/xml')
+            request.appendBody(str(e))
+        except Exception as e:
+            exc_type, exc_value, exc_traceback = sys.exc_info()
+            QgsMessageLog.logMessage("Exception: %s\n%s" % (
+                e,
+                ''.join(traceback.format_tb(exc_traceback)) + str(e)))
+            request.clearHeaders()
+            #request.setHeader('Content-type', 'text/xml')
+            request.clearBody()
+            request.setInfoFormat('text/xml')
+            request.appendBody(str(e))
