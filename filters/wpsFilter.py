@@ -55,14 +55,14 @@ def get_processing_algs():
         return Processing.algs
 
 
-def get_qgis_server_address():
+def get_qgis_server_address(serverInterface):
     """Return the QGIS base server address"""
     qgisaddress = pywpsConfig.getConfigValue("qgis", "qgisserveraddress")
     if qgisaddress is None:
-        server_port = self.serverInterface().getEnv('SERVER_PORT')
-        qgisaddress = self.serverInterface().getEnv('SERVER_NAME') + (":%s" %
-                                                                      server_port if server_port != '80' else '') + self.serverInterface().getEnv('SCRIPT_NAME')
-        if self.serverInterface().getEnv('HTTPS'):
+        server_port = serverInterface.getEnv('SERVER_PORT')
+        qgisaddress = serverInterface.getEnv('SERVER_NAME') + (":%s" %
+                                                               server_port if server_port != '80' else '') + serverInterface.getEnv('SCRIPT_NAME')
+        if serverInterface.getEnv('HTTPS'):
             qgisaddress = 'https://' + qgisaddress
         else:
             qgisaddress = 'http://' + qgisaddress
@@ -1077,7 +1077,7 @@ class wpsFilter(QgsServerFilter):
 
             #pywpsConfig.setConfigValue("server","outputPath", '/tmp/wpsoutputs')
             #pywpsConfig.setConfigValue("server","logFile", '/tmp/pywps.log')
-            qgisaddress = get_qgis_server_address()
+            qgisaddress = get_qgis_server_address(self.serverInterface())
             qgisaddress = qgisaddress + '?'
             if 'map' in params:
                 qgisaddress = qgisaddress + 'map=' + params['map'] + '&'
