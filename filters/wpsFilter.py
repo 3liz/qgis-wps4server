@@ -58,42 +58,51 @@ def get_processing_algs():
 def get_qgis_server_address(serverInterface):
     """Return the QGIS base server address"""
     qgisaddress = pywpsConfig.getConfigValue("qgis", "qgisserveraddress")
-    if not qgisaddress:
-        server_port = serverInterface.getEnv('SERVER_PORT')
-        qgisaddress = serverInterface.getEnv('SERVER_NAME')
-        wpsaddress += ":%s" % server_port if server_port and server_port != '80' else ''
-        qgisaddress += serverInterface.getEnv('SCRIPT_NAME')
-        if serverInterface.getEnv('HTTPS'):
-            qgisaddress = 'https://' + qgisaddress
-        else:
-            qgisaddress = 'http://' + qgisaddress
+    if qgisaddress:
+        return qgisaddress
+
+    server_port = serverInterface.getEnv('SERVER_PORT')
+    qgisaddress = serverInterface.getEnv('SERVER_NAME')
+    wpsaddress += ":%s" % server_port if server_port and server_port != '80' else ''
+    qgisaddress += serverInterface.getEnv('SCRIPT_NAME')
+    if serverInterface.getEnv('HTTPS'):
+        qgisaddress = 'https://' + qgisaddress
+    else:
+        qgisaddress = 'http://' + qgisaddress
     return qgisaddress
 
 def get_wps_server_address(serverInterface, params):
     wpsaddress = pywpsConfig.getConfigValue("wps", "serveraddress")
-    if not wpsaddress:
-        server_port = serverInterface.getEnv('SERVER_PORT')
-        wpsaddress = serverInterface.getEnv('SERVER_NAME')
-        wpsaddress += ":%s" % server_port if server_port and server_port != '80' else ''
-        wpsaddress += serverInterface.getEnv('SCRIPT_NAME')
-        if serverInterface.getEnv('HTTPS'):
-            wpsaddress = 'https://' + wpsaddress
-        else:
-            wpsaddress = 'http://' + wpsaddress
-        wpsaddress += '?'
-        mapParam = ''
-        if 'map' in params:
-            mapParam = params['map']
-        elif 'MAP' in params:
-            mapParam = params['MAP']
+    if wpsaddress:
+        if wpsaddress.count('?') == 0:
+            wpsaddress += '?'
+        elif wpsaddress[-1] != '&':
+            wpsaddress += '&'
+        return wpsaddress
 
-        if mapParam and os.environ.has_key("QGIS_PROJECT_FILE") and mapParam != os.environ["QGIS_PROJECT_FILE"]:
-            wpsaddress += 'MAP=' + mapParam + '&'
+    server_port = serverInterface.getEnv('SERVER_PORT')
+    wpsaddress = serverInterface.getEnv('SERVER_NAME')
+    wpsaddress += ":%s" % server_port if server_port and server_port != '80' else ''
+    wpsaddress += serverInterface.getEnv('SCRIPT_NAME')
+    if serverInterface.getEnv('HTTPS'):
+        wpsaddress = 'https://' + wpsaddress
+    else:
+        wpsaddress = 'http://' + wpsaddress
+    wpsaddress += '?'
+    mapParam = ''
+    if 'map' in params:
+        mapParam = params['map']
+    elif 'MAP' in params:
+        mapParam = params['MAP']
 
-        if 'config' in params:
-            wpsaddress += 'config=' + params['config'] + '&'
-        elif 'CONFIG' in params:
-            wpsaddress += 'CONFIG=' + params['CONFIG'] + '&'
+    if mapParam and os.environ.has_key("QGIS_PROJECT_FILE") and mapParam != os.environ["QGIS_PROJECT_FILE"]:
+        wpsaddress += 'MAP=' + mapParam + '&'
+
+    if 'config' in params:
+        wpsaddress += 'config=' + params['config'] + '&'
+    elif 'CONFIG' in params:
+        wpsaddress += 'CONFIG=' + params['CONFIG'] + '&'
+
     return wpsaddress
 
 
