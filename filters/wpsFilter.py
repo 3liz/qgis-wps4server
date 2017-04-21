@@ -106,7 +106,7 @@ class QGISProgress(SilentProgress):
         self.msg.append(msg)
 
 
-def QGISProcessFactory(alg_name, project='', vectors=[], rasters=[], crss=[]):
+def QGISProcessFactory(alg_name, project='', vectors=[], rasters=[], crss=[], wpsserver=''):
     """This is the bridge between SEXTANTE and PyWPS:
     it creates PyWPS processes based on SEXTANTE alg name"""
     from pywps.Process import WPSProcess
@@ -165,6 +165,8 @@ def QGISProcessFactory(alg_name, project='', vectors=[], rasters=[], crss=[]):
             # ['Parameter', 'ParameterBoolean', 'ParameterCrs', 'ParameterDataObject', 'ParameterExtent', 'ParameterFile', 'ParameterFixedTable', 'ParameterMultipleInput', 'ParameterNumber', 'ParameterRange', 'ParameterRaster', 'ParameterSelection', 'ParameterString', 'ParameterTable','ParameterTableField', 'ParameterVector']
             if parm.__class__.__name__ == 'ParameterVector':
                 values = []
+                schema = wpsserver
+                schema += 'SERVICE=WPS&REQUEST=GetSchema&VERSION=1.0.0&OUTPUTFORMAT=XMLSCHEMA'
                 if vectorLayers and ParameterVector.VECTOR_TYPE_ANY in parm.shapetype:
                     values = [l['name'] for l in vectorLayers]
                 elif vectorLayers:
@@ -177,6 +179,13 @@ def QGISProcessFactory(alg_name, project='', vectors=[], rasters=[], crss=[]):
                     if ParameterVector.VECTOR_TYPE_POLYGON in parm.shapetype:
                         values += [l['name']
                                    for l in vectorLayers if l['geometry'] == 'Polygon']
+                else:
+                    if ParameterVector.VECTOR_TYPE_POINT in parm.shapetype:
+                        schema += '&GEOMETRYNAME=Point'
+                    if ParameterVector.VECTOR_TYPE_LINE in parm.shapetype:
+                        schema += '&GEOMETRYNAME=Line'
+                    if ParameterVector.VECTOR_TYPE_POLYGON in parm.shapetype:
+                        schema += '&GEOMETRYNAME=Polygon'
                 if values:
                     self._inputs['Input%s' % i] = self.addLiteralInput(escape(parm.name),
                                                                        escape(parm.description).replace(
@@ -193,19 +202,22 @@ def QGISProcessFactory(alg_name, project='', vectors=[], rasters=[], crss=[]):
                                                     formats = [{
                         'mimeType':'text/xml',
                         'encoding': 'utf-8',
-                        'schema': escape('?SERVICE=WPS&REQUEST=GetSchema&VERSION=1.0.0&OUTPUTFORMAT=XMLSCHEMA')
+                        'schema': escape(schema)
                     },{
                         'mimeType':'text/xml; subtype=gml/2.1.2',
-                        'encoding': 'utf-8'
+                        'encoding': 'utf-8',
+                        'schema': escape(schema)
                     },{
                         'mimeType':'text/xml; subtype=gml/3.1.1',
                         'encoding': 'utf-8'
                     },{
                         'mimeType':'application/gml+xml',
-                        'encoding': 'utf-8'
+                        'encoding': 'utf-8',
+                        'schema': escape(schema)
                     },{
                         'mimeType':'application/gml+xml; version=2.1.2',
-                        'encoding': 'utf-8'
+                        'encoding': 'utf-8',
+                        'schema': escape(schema)
                     },{
                         'mimeType':'application/gml+xml; version=3.1.1',
                         'encoding': 'utf-8'
@@ -1102,7 +1114,8 @@ class wpsFilter(QgsServerFilter):
                             continue
                     QgsMessageLog.logMessage("provider " + i + " " + m)
                     processes.append(QGISProcessFactory(
-                        m, projectPath, vectorLayers, rasterLayers, crsList))
+                        m, projectPath, vectorLayers, rasterLayers, crsList,
+                        get_wps_server_address(self.serverInterface(), params)))
 
             #pywpsConfig.setConfigValue("server","outputPath", '/tmp/wpsoutputs')
             #pywpsConfig.setConfigValue("server","logFile", '/tmp/pywps.log')
