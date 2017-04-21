@@ -58,15 +58,43 @@ def get_processing_algs():
 def get_qgis_server_address(serverInterface):
     """Return the QGIS base server address"""
     qgisaddress = pywpsConfig.getConfigValue("qgis", "qgisserveraddress")
-    if qgisaddress is None:
+    if not qgisaddress:
         server_port = serverInterface.getEnv('SERVER_PORT')
-        qgisaddress = serverInterface.getEnv('SERVER_NAME') + (":%s" %
-                                                               server_port if server_port != '80' else '') + serverInterface.getEnv('SCRIPT_NAME')
+        qgisaddress = serverInterface.getEnv('SERVER_NAME')
+        qgisaddress += (server_port != '80' and ":%s" % server_port or '')
+        qgisaddress += serverInterface.getEnv('SCRIPT_NAME')
         if serverInterface.getEnv('HTTPS'):
             qgisaddress = 'https://' + qgisaddress
         else:
             qgisaddress = 'http://' + qgisaddress
     return qgisaddress
+
+def get_wps_server_address(serverInterface, params):
+    wpsaddress = pywpsConfig.getConfigValue("wps", "serveraddress")
+    if not wpsaddress:
+        server_port = serverInterface.getEnv('SERVER_PORT')
+        wpsaddress = serverInterface.getEnv('SERVER_NAME')
+        wpsaddress += (server_port != '80' and ":%s" % server_port or '')
+        wpsaddress += serverInterface.getEnv('SCRIPT_NAME')
+        if serverInterface.getEnv('HTTPS'):
+            wpsaddress = 'https://' + wpsaddress
+        else:
+            wpsaddress = 'http://' + wpsaddress
+        wpsaddress += '?'
+        mapParam = ''
+        if 'map' in params:
+            mapParam = params['map']
+        elif 'MAP' in params:
+            mapParam = params['MAP']
+
+        if mapParam and os.environ.has_key("QGIS_PROJECT_FILE") and mapParam != os.environ["QGIS_PROJECT_FILE"]:
+            wpsaddress += 'MAP=' + mapParam + '&'
+
+        if 'config' in params:
+            wpsaddress += 'config=' + params['config'] + '&'
+        elif 'CONFIG' in params:
+            wpsaddress += 'CONFIG=' + params['CONFIG'] + '&'
+    return wpsaddress
 
 
 class QGISProgress(SilentProgress):
@@ -164,7 +192,8 @@ def QGISProcessFactory(alg_name, project='', vectors=[], rasters=[], crss=[]):
                                                     minOccurs=minOccurs,
                                                     formats = [{
                         'mimeType':'text/xml',
-                        'encoding': 'utf-8'
+                        'encoding': 'utf-8',
+                        'schema': escape('?SERVICE=WPS&REQUEST=GetSchema&VERSION=1.0.0&OUTPUTFORMAT=XMLSCHEMA')
                     },{
                         'mimeType':'text/xml; subtype=gml/2.1.2',
                         'encoding': 'utf-8'
@@ -1077,21 +1106,8 @@ class wpsFilter(QgsServerFilter):
 
             #pywpsConfig.setConfigValue("server","outputPath", '/tmp/wpsoutputs')
             #pywpsConfig.setConfigValue("server","logFile", '/tmp/pywps.log')
-            qgisaddress = get_qgis_server_address(self.serverInterface())
-            qgisaddress = qgisaddress + '?'
-            if 'map' in params:
-                qgisaddress = qgisaddress + 'map=' + params['map'] + '&'
-            elif 'MAP' in params:
-                qgisaddress = qgisaddress + 'MAP=' + params['MAP'] + '&'
-            if 'config' in params:
-                qgisaddress = qgisaddress + \
-                    'config=' + params['config'] + '&'
-            elif 'CONFIG' in params:
-                qgisaddress = qgisaddress + \
-                    'CONFIG=' + params['CONFIG'] + '&'
-            #pywpsConfig.setConfigValue("wps","serveraddress", qgisaddress)
-            QgsMessageLog.logMessage("qgisaddress " + qgisaddress)
-            #pywpsConfig.setConfigValue("qgis","qgisserveraddress", qgisaddress)
+            wpsaddress = get_wps_server_address(self.serverInterface(), params)
+            QgsMessageLog.logMessage("wpsaddress " + get_wps_server_address(self.serverInterface(), params))
 
             # init wps
             method = 'GET'
@@ -1131,9 +1147,9 @@ class wpsFilter(QgsServerFilter):
                             import re
                             import xml.sax.saxutils as saxutils
                             resp = re.sub(
-                                r'Get xlink:href=".*"', 'Get xlink:href="' + saxutils.escape(qgisaddress) + '"', resp)
+                                r'Get xlink:href=".*"', 'Get xlink:href="' + saxutils.escape(wpsaddress) + '"', resp)
                             resp = re.sub(
-                                r'Post xlink:href=".*"', 'Post xlink:href="' + saxutils.escape(qgisaddress) + '"', resp)
+                                r'Post xlink:href=".*"', 'Post xlink:href="' + saxutils.escape(wpsaddress) + '"', resp)
                         elif pywpsConfig.getConfigValue("wps", "serveraddress") and wps.request.contentType == 'application/xml':
                             import re
                             m = re.search(r'Get xlink:href="(.*)"', resp)
