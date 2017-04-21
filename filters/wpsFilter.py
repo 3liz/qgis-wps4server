@@ -61,7 +61,7 @@ def get_qgis_server_address(serverInterface):
     if not qgisaddress:
         server_port = serverInterface.getEnv('SERVER_PORT')
         qgisaddress = serverInterface.getEnv('SERVER_NAME')
-        qgisaddress += (server_port != '80' and ":%s" % server_port or '')
+        wpsaddress += ":%s" % server_port if server_port and server_port != '80' else ''
         qgisaddress += serverInterface.getEnv('SCRIPT_NAME')
         if serverInterface.getEnv('HTTPS'):
             qgisaddress = 'https://' + qgisaddress
@@ -74,7 +74,7 @@ def get_wps_server_address(serverInterface, params):
     if not wpsaddress:
         server_port = serverInterface.getEnv('SERVER_PORT')
         wpsaddress = serverInterface.getEnv('SERVER_NAME')
-        wpsaddress += (server_port != '80' and ":%s" % server_port or '')
+        wpsaddress += ":%s" % server_port if server_port and server_port != '80' else ''
         wpsaddress += serverInterface.getEnv('SCRIPT_NAME')
         if serverInterface.getEnv('HTTPS'):
             wpsaddress = 'https://' + wpsaddress
