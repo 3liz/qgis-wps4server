@@ -374,6 +374,8 @@ def QGISProcessFactory(alg_name, project='', vectors=[], rasters=[], crss=[], wp
             i += 1
         i = 1
         for parm in alg.outputs:
+            if parm.hidden:
+                continue
             # TODO: create "LiteralOutput", "ComplexOutput" or "BoundingBoxOutput"
             # this can be done checking the class:
             # parm.__class__, one of
