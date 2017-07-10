@@ -1065,7 +1065,7 @@ class wpsFilter(QgsServerFilter):
                 p_dom = minidom.parse(projectPath)
                 for ml in p_dom.getElementsByTagName('maplayer'):
                     l = {'type': ml.attributes["type"].value,
-                         'name': ml.getElementsByTagName('layername')[0].childNodes[0].data,
+                         'name': unicode(ml.getElementsByTagName('layername')[0].childNodes[0].data).encode('UTF8'),
                          'datasource': ml.getElementsByTagName('datasource')[0].childNodes[0].data,
                          'provider': ml.getElementsByTagName('provider')[0].childNodes[0].data,
                          'crs': ml.getElementsByTagName('srs')[0].getElementsByTagName('authid')[0].childNodes[0].data,
