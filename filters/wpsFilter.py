@@ -1149,8 +1149,8 @@ class wpsFilter(QgsServerFilter):
             if request_body:
                 tmpPath = pywpsConfig.getConfigValue("server", "tempPath")
                 requestFile = open(os.path.join(
-                    tmpPath, "request-" + str(wps.UUID)), "w")
-                requestFile.write(str(request_body))
+                    tmpPath, "request-" + str(wps.UUID)), "wb+")
+                requestFile.write(request_body.encode('utf8'))
                 requestFile.close()
                 requestFile = open(os.path.join(
                     tmpPath, "request-" + str(wps.UUID)), "r")
