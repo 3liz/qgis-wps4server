@@ -105,6 +105,18 @@ def get_wps_server_address(serverInterface, params):
 
     return wpsaddress
 
+class HiddenPrints:
+    def __init__(self):
+        self.path = pywpsConfig.getConfigValue("server","logFile")
+        if not self.path:
+            self.path = os.devnull
+
+    def __enter__(self):
+        self._original_stdout = sys.stdout
+        sys.stdout = open(self.path, 'w')
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        sys.stdout = self._original_stdout
 
 class QGISProgress(SilentProgress):
 
@@ -708,7 +720,9 @@ def QGISProcessFactory(alg_name, project='', vectors=[], rasters=[], crss=[], wp
             self.alg.defineCharacteristics()
 
         progress = QGISProgress()
-        tAlg = Processing.runAlgorithm(self.alg, None, args, progress=progress)
+        tAlg = None
+        with HiddenPrints():
+            tAlg = Processing.runAlgorithm(self.alg, None, args, progress=progress)
         # if runalg failed return exception message
         if not tAlg:
             return 'Error in processing'
