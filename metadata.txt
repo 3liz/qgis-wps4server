@@ -10,7 +10,7 @@
 name=wps4server
 qgisMinimumVersion=2.14
 description=OGC Web Processing Service for QGIS Server
-version=1.0.6
+version=1.0.7
 author=DHONT René-Luc (3Liz)
 email=rldhont@3liz.com
 ; if True it's a server plugin
@@ -34,7 +34,7 @@ homepage=http://github.com/3liz/qgis-wps4server
 category=server
 icon=icon.png
 # experimental flag
-experimental=True
+experimental=False
 
 # deprecated flag (applies to the whole plugin, not just a single version)
 deprecated=False
