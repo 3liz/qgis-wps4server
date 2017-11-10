@@ -914,11 +914,13 @@ class wpsFilter(QgsServerFilter):
     def responseComplete(self):
         QgsMessageLog.logMessage("wpsFilter.responseComplete")
         request = self.serverInterface().requestHandler()
+        params = request.parameterMap()
+        service = params.get('SERVICE', '')
+        if not service or service.upper() != 'WPS':
+            return;
         # Inject env vars from the server env to the WPS env
         for k in ('SERVER_PORT', 'HTTPS', 'HTTP_HOST'):
             os.environ[k] = self.serverInterface().getEnv(k)
-        params = request.parameterMap()
-        service = params.get('SERVICE', '')
         # pdb.set_trace()
         if service and service.upper() == 'WPS':
             if params.get('REQUEST', '').upper() == 'GETSCHEMA':
