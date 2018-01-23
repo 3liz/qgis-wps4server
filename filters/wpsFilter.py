@@ -991,6 +991,16 @@ class wpsFilter(QgsServerFilter):
             os.environ["PYWPS_CFG"] = configPath
         pywpsConfig.loadConfiguration()
 
+        # Set the temp dir
+        if pywpsConfig.config.has_section('server'):
+            if pywpsConfig.config.has_option('server', 'tempPath'):
+                if sys.platform.startswith('win'):
+                    os.environ['TEMP'] = pywpsConfig.getConfigValue(
+                        'server', 'tempPath')
+                else:
+                    os.environ['TMPDIR'] = pywpsConfig.getConfigValue(
+                        'server', 'tempPath')
+
         try:
             providerList = ''
             algList = ''
