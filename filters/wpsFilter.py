@@ -178,7 +178,7 @@ def QGISProcessFactory(alg_name, project='', vectors=[], rasters=[], crss=[], wp
 
             parmDesc = ''
             if algParamDescs and parm.name in algParamDescs:
-                parmDesc = algParamDescs[parm.name]
+                parmDesc = algParamDescs[parm.name].encode('utf8')
                 parmDesc = '<![CDATA[' + parmDesc + ']]>'
             # TODO: create "LiteralValue", "ComplexValue" or "BoundingBoxValue"
             # this can be done checking the class:
@@ -383,6 +383,8 @@ def QGISProcessFactory(alg_name, project='', vectors=[], rasters=[], crss=[], wp
                                                                    default=getattr(parm, 'default', None))
                 if parm.__class__.__name__ == 'ParameterBoolean':
                     self._inputs['Input%s' % i].values = (True, False)
+            # encode title
+            self._inputs['Input%s' % i].title = self._inputs['Input%s' % i].title.encode('utf8')
             i += 1
         i = 1
         for parm in alg.outputs:
