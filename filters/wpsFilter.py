@@ -497,6 +497,8 @@ def QGISProcessFactory(alg_name, project='', vectors=[], rasters=[], crss=[], wp
                     type = types.FloatType
                 self._outputs['Output%s' % i] = self.addLiteralOutput(parm.name, parm.description,
                                                                       type=type)
+            # encode title
+            self._outputs['Output%s' % i].title = self._outputs['Output%s' % i].title.encode('utf8')
             i += 1
 
         for k in self._inputs:
