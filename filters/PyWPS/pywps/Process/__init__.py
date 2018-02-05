@@ -3,8 +3,8 @@ Process
 -------
 Package for creating (Py)WPS Process classes
 """
-# Author:	Jachym Cepicky
-#        	http://les-ejk.cz
+# Author:   Jachym Cepicky
+#           http://les-ejk.cz
 # Lince:
 #
 # Web Processing Service implementation
@@ -40,19 +40,19 @@ import traceback
 class Status:
     """Status object for each process
 
-    .. attribute:: creationTime 
+    .. attribute:: creationTime
 
         :func:`time.time()`
 
-    .. attribute:: code 
+    .. attribute:: code
 
         "processstarted", "processfailed" or anything else
 
-    .. attribute:: percentCompleted 
+    .. attribute:: percentCompleted
 
         how far the calculation is
 
-    .. attribute:: value 
+    .. attribute:: value
 
         message string to the client
     """
@@ -162,7 +162,7 @@ class WPSProcess:
 
     .. attribute:: title
 
-        Process title 
+        Process title
 
     .. attribute:: abstract
 
@@ -247,6 +247,7 @@ class WPSProcess:
     debug = None
     status = None
     inputs = None
+    orderedInputs = None
     outputs = None
     lang = None
     grassLocation = None
@@ -291,6 +292,7 @@ class WPSProcess:
 
         self.status = Status()
         self.inputs = {}
+        self.orderedInputs = []
         self.outputs = {}
 
         self.lang = Lang.Lang()
@@ -335,7 +337,7 @@ class WPSProcess:
 
         :param identifier: input identifier
         :param title: input title
-        :param abstract: input description. 
+        :param abstract: input description.
         :param uoms: List of value units
         :type uoms: [string]
         :param minOccurs: minimum number of occurrences, default 1
@@ -378,6 +380,8 @@ class WPSProcess:
                                                             minOccurs=minOccurs, maxOccurs=maxOccurs,
                                                             dataType=type, uoms=uoms, values=allowedValues,
                                                             default=default)
+        self.orderedInputs.append(identifier)
+
         return self.inputs[identifier]
 
     def addComplexInput(self, identifier, title, abstract=None,
@@ -387,11 +391,11 @@ class WPSProcess:
 
         :param identifier: input identifier
         :param title: input title
-        :param abstract: input description. 
+        :param abstract: input description.
         :param minOccurs: minimum number of occurrences, default 1
         :param maxOccurs: maximum number of occurrences, default 1
         :param formats: List of dictionary according to table 23 (page 25)
-            OGC WPS. 
+            OGC WPS.
 
             Example::
 
@@ -428,6 +432,7 @@ class WPSProcess:
                                                             title=title, abstract=abstract,
                                                             metadata=metadata, minOccurs=minOccurs, maxOccurs=maxOccurs,
                                                             formats=formats, maxmegabites=maxmegabites)
+        self.orderedInputs.append(identifier)
 
         return self.inputs[identifier]
 
@@ -455,6 +460,7 @@ class WPSProcess:
         self.inputs[identifier] = InAndOutputs.BoundingBoxInput(identifier,
                                                                 title, abstract=abstract, metadata=metadata,
                                                                 minOccurs=minOccurs, maxOccurs=maxOccurs, crss=crss)
+        self.orderedInputs.append(identifier)
 
         return self.inputs[identifier]
 
@@ -512,7 +518,7 @@ class WPSProcess:
 
         :param identifier: input identifier
         :param title: input title
-        :param abstract: input description. 
+        :param abstract: input description.
         :param uoms: List of string  value units
         :param type: :class:`types.TypeType` value type, e.g. Integer, String, etc. you
                     can uses the :mod:`types` module of python.

@@ -1,5 +1,5 @@
-# Author:	Jachym Cepicky
-#        	http://les-ejk.cz
+# Author:   Jachym Cepicky
+#           http://les-ejk.cz
 #               jachym at les-ejk dot cz
 # Lince:
 #
@@ -119,7 +119,10 @@ class DescribeProcess(Request):
         """
 
         processInputs = []
-        for identifier in process.inputs:
+        orderedInputs = process.orderedInputs
+        if not orderedInputs:
+            orderedInputs = process.inputs.keys()
+        for identifier in orderedInputs:
             processInput = {}
             input = process.inputs[identifier]
             processInput["identifier"] = identifier
@@ -177,11 +180,11 @@ class DescribeProcess(Request):
     def literalValue(self, inoutput, processInOutput):
         """Format literal value attributes
 
-        :param inoutput: :class:`pywps.Process.InAndOutputs.Input` or 
+        :param inoutput: :class:`pywps.Process.InAndOutputs.Input` or
             :class:`pywps.Process.InAndOutputs.Output`
 
         :param processInOutput: dictionary, where to store the parameters
-            in 
+            in
         """
 
         # data types
@@ -234,11 +237,11 @@ class DescribeProcess(Request):
     def complexValue(self, inoutput, processInOutput):
         """Format complex value attributes, it also changes None format to application/x-empty
 
-        :param inoutput: :class:`pywps.Process.InAndOutputs.Input` or 
+        :param inoutput: :class:`pywps.Process.InAndOutputs.Input` or
             :class:`pywps.Process.InAndOutputs.Output`
 
         :param processInOutput: dictionary, where to store the parameters
-            in 
+            in
         """
 
         processInOutput["mimetype"] = inoutput.formats[0]["mimeType"]
@@ -267,11 +270,11 @@ class DescribeProcess(Request):
     def bboxValue(self, input, processInput):
         """Format bboxValue value attributes
 
-        :param inoutput: :class:`pywps.Process.InAndOutputs.Input` or 
+        :param inoutput: :class:`pywps.Process.InAndOutputs.Input` or
             :class:`pywps.Process.InAndOutputs.Output`
 
         :param processInOutput: dictionary, where to store the parameters
-            in 
+            in
         """
         processInput["crs"] = input.crss[0]
 
