@@ -349,7 +349,7 @@ def QGISProcessFactory(alg_name, project='', vectors=[], rasters=[], crss=[], wp
                                                                    minOccurs=minOccurs,
                                                                    type=types.StringType,
                                                                    default=getattr(parm, 'default', None))
-                self._inputs['Input%s' % i].values = [o for o in parm.options]
+                self._inputs['Input%s' % i].values = [o.encode('utf8') for o in parm.options]
 
             elif parm.__class__.__name__ == 'ParameterRange':
                 # parm.default can be None!!!!
