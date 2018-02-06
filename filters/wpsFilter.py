@@ -349,7 +349,7 @@ def QGISProcessFactory(alg_name, project='', vectors=[], rasters=[], crss=[], wp
                                                                    minOccurs=minOccurs,
                                                                    type=types.StringType,
                                                                    default=getattr(parm, 'default', None))
-                self._inputs['Input%s' % i].values = parm.options
+                self._inputs['Input%s' % i].values = [o for o in parm.options]
 
             elif parm.__class__.__name__ == 'ParameterRange':
                 # parm.default can be None!!!!
@@ -1102,12 +1102,12 @@ class wpsFilter(QgsServerFilter):
                          'proj4': ml.getElementsByTagName('srs')[0].getElementsByTagName('proj4')[0].childNodes[0].data
                          }
                     # Update relative path
-                    if l['provider'] in ['ogr', 'gdal'] and str(l['datasource']).startswith('.'):
+                    if l['provider'] in ['ogr', 'gdal'] and l['datasource'].startswith('.'):
                         l['datasource'] = os.path.abspath(
                             os.path.join(projectFolder, l['datasource']))
                         if not os.path.exists(l['datasource']):
                             continue
-                    elif l['provider'] in ['gdal'] and str(l['datasource']).startswith('NETCDF:'):
+                    elif l['provider'] in ['gdal'] and l['datasource'].startswith('NETCDF:'):
                         theURIParts = l['datasource'].split(":")
                         src = theURIParts[1]
                         src = src.replace('"', '')
