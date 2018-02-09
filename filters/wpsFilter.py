@@ -1104,7 +1104,7 @@ class wpsFilter(QgsServerFilter):
                     # Update relative path
                     if l['provider'] in ['ogr', 'gdal'] and l['datasource'].startswith('.'):
                         l['datasource'] = os.path.abspath(
-                            os.path.join(projectFolder, l['datasource']))
+                            os.path.join(projectFolder, l['datasource'])).encode('UTF8')
                         if not os.path.exists(l['datasource']):
                             continue
                     elif l['provider'] in ['gdal'] and l['datasource'].startswith('NETCDF:'):
