@@ -330,6 +330,40 @@ def QGISProcessFactory(alg_name, project='', vectors=[], rasters=[], crss=[], wp
                                                                        '\\', ''),
                                                                    parmDesc,
                                                                    minOccurs=minOccurs, formats=[{'mimeType': 'text/csv'}])
+            elif parm.__class__.__name__ == 'ParameterFile':
+                if parm.ext == 'png':
+                    self._inputs['Input%s' % i] = self.addComplexInput(escape(parm.name),
+                                                                       escape(parm.description).replace(
+                                                                           '\\', ''),
+                                                                       parmDesc,
+                                                                       formats=[{'mimeType': 'image/png'}])
+                elif parm.ext in ['jpg', 'jpeg']:
+                    self._inputs['Input%s' % i] = self.addComplexInput(escape(parm.name),
+                                                                       escape(parm.description).replace(
+                                                                           '\\', ''),
+                                                                       parmDesc,
+                                                                       formats=[{'mimeType': 'image/jpeg'}])
+                elif parm.ext in ['pdf', 'json', 'zip']:
+                    self._inputs['Input%s' % i] = self.addComplexInput(escape(parm.name),
+                                                                       escape(parm.description).replace(
+                                                                           '\\', ''),
+                                                                       parmDesc,
+                                                                       formats=[{'mimeType': 'application/' + parm.ext}])
+                elif parm.ext in ['txt', 'text']:
+                    self._inputs['Input%s' % i] = self.addComplexInput(escape(parm.name),
+                                                                       escape(parm.description).replace(
+                                                                           '\\', ''),
+                                                                       parmDesc,
+                                                                       formats=[{'mimeType': 'text/plain'}])
+                elif parm.ext in ['xml', 'html', 'csv']:
+                    self._inputs['Input%s' % i] = self.addComplexInput(escape(parm.name),
+                                                                       escape(parm.description).replace(
+                                                                           '\\', ''),
+                                                                       parmDesc,
+                                                                       formats=[{'mimeType': 'text/' + parm.ext}])
+                else:
+                    self._inputs['Input%s' % i] = self.addComplexInput(parm.name, parm.description,
+                                                                       formats=[{'mimeType': 'application/octet-stream'}])
 
             elif parm.__class__.__name__ == 'ParameterExtent':
                 self._inputs['Input%s' % i] = self.addBBoxInput(escape(parm.name),
