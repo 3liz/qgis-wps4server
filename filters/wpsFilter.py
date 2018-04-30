@@ -25,6 +25,7 @@ from PyQt4.QtCore import *
 import os, types
 import sys
 import re
+import json
 import logging
 import traceback
 
@@ -138,13 +139,32 @@ def QGISProcessFactory(alg_name, project='', vectors=[], rasters=[], crss=[], wp
     class_name = alg_name.replace(':', '_')
     alg = Processing.getAlgorithm(alg_name)
 
-    algDesc = alg.shortHelp()
-    if not algDesc:
-        algDesc = ''
+    alg_title = escape(alg.name).replace('\\', '')
+    alg_desc = ''
+    # Extract title and description from Help file
+    if hasattr(alg, 'descriptionFile') and alg.descriptionFile is not None:
+        helpFile = alg.descriptionFile + '.help'
+        if os.path.exists(helpFile):
+            with open(helpFile) as hf:
+                try:
+                    descriptions = json.load(hf)
+                    if 'ALG_TITLE' in descriptions:
+                        alg_title = unicode(descriptions['ALG_TITLE'])
+                    if 'ALG_DESC' in descriptions:
+                        alg_desc = unicode(descriptions['ALG_DESC'])
+                except Exception, e:
+                    QgsMessageLog.logMessage("QGISProcessFactory " + e.__str__())
+                    pass
+
+    # Get help if not provided by file and clean description
+    if not alg_desc:
+        alg_desc = alg.shortHelp()
+    if not alg_desc:
+        alg_desc = ''
     else:
-        algDesc = re.sub(r'[^\x00-\x7F]', '@', algDesc)
-        algDesc = algDesc.replace('<p></p>', '')
-        algDesc = '<![CDATA[' + algDesc + ']]>'
+        alg_desc = re.sub(r'[^\x00-\x7F]', '@', alg_desc)
+        alg_desc = alg_desc.replace('<p></p>', '')
+        alg_desc = '<![CDATA[' + alg_desc + ']]>'
 
     # layer inputs
     rasterLayers = rasters
@@ -154,11 +174,11 @@ def QGISProcessFactory(alg_name, project='', vectors=[], rasters=[], crss=[], wp
         # Automatically init the process attributes
         WPSProcess.__init__(self,
                             identifier=alg_name,  # must be same, as filename
-                            title=escape(alg.name).replace('\\', ''),
+                            title=alg_title,
                             version="0.1",
                             storeSupported="true",
                             statusSupported="true",
-                            abstract=algDesc,
+                            abstract=alg_desc,
                             grassLocation=False)
         self.alg = alg
 
