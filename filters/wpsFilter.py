@@ -141,6 +141,7 @@ def QGISProcessFactory(alg_name, project='', vectors=[], rasters=[], crss=[], wp
 
     alg_title = escape(alg.name).replace('\\', '')
     alg_desc = ''
+    param_titles = {}
     # Extract title and description from Help file
     if hasattr(alg, 'descriptionFile') and alg.descriptionFile is not None:
         helpFile = alg.descriptionFile + '.help'
@@ -152,6 +153,8 @@ def QGISProcessFactory(alg_name, project='', vectors=[], rasters=[], crss=[], wp
                         alg_title = unicode(descriptions['ALG_TITLE'])
                     if 'ALG_DESC' in descriptions:
                         alg_desc = unicode(descriptions['ALG_DESC'])
+                    if 'PARAM_TITLES' in descriptions:
+                        param_titles = dict([(p,unicode(t)) for p,t in descriptions['PARAM_TITLES'].items() if t])
                 except Exception, e:
                     QgsMessageLog.logMessage("QGISProcessFactory " + e.__str__())
                     pass
@@ -195,6 +198,9 @@ def QGISProcessFactory(alg_name, project='', vectors=[], rasters=[], crss=[], wp
             minOccurs = 1
             if getattr(parm, 'optional', False):
                 minOccurs = 0
+
+            if param_titles and parm.name in param_titles:
+                parm.description = param_titles[parm.name]
 
             parmDesc = ''
             if algParamDescs and parm.name in algParamDescs:
