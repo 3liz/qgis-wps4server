@@ -150,11 +150,11 @@ def QGISProcessFactory(alg_name, project='', vectors=[], rasters=[], crss=[], wp
                 try:
                     descriptions = json.load(hf)
                     if 'ALG_TITLE' in descriptions:
-                        alg_title = unicode(descriptions['ALG_TITLE'])
+                        alg_title = unicode(descriptions['ALG_TITLE']).encode('utf8')
                     if 'ALG_DESC' in descriptions:
-                        alg_desc = unicode(descriptions['ALG_DESC'])
+                        alg_desc = unicode(descriptions['ALG_DESC']).encode('utf8')
                     if 'PARAM_TITLES' in descriptions:
-                        param_titles = dict([(p,unicode(t)) for p,t in descriptions['PARAM_TITLES'].items() if t])
+                        param_titles = dict([(p,unicode(t).encode('utf8')) for p,t in descriptions['PARAM_TITLES'].items() if t])
                 except Exception, e:
                     QgsMessageLog.logMessage("QGISProcessFactory " + e.__str__())
                     pass
@@ -1256,7 +1256,7 @@ class wpsFilter(QgsServerFilter):
                         QgsMessageLog.logMessage(
                             "contentType " + wps.request.contentType)
                         request.setInfoFormat(wps.request.contentType)
-                        resp = wps.response
+                        resp = wps.response.decode('utf8')
                         if not pywpsConfig.getConfigValue("wps", "serveraddress") and wps.request.contentType == 'application/xml':
                             import re
                             import xml.sax.saxutils as saxutils
@@ -1271,6 +1271,7 @@ class wpsFilter(QgsServerFilter):
                                 import xml.sax.saxutils as saxutils
                                 resp = re.sub(r'Get xlink:href=".*"', 'Get xlink:href="' + m.group(1)[
                                               :-1] + saxutils.escape('&') + '"', resp)
+                        resp = resp.encode('utf8')
                         # test response type
                         if isinstance(resp, file):
                             resp = resp.read()
