@@ -277,7 +277,10 @@ class LiteralInput(Input):
             if self.dataType == types.FloatType:
                 value = float(value)
             elif self.dataType == types.StringType:
-                value = str(value)
+                if type(value) == types.StringType:
+                    value = value.decode('utf8')
+                else:
+                    value = unicode(value)
             elif self.dataType == types.IntType:
                 value = int(value)
             elif self.dataType == types.BooleanType:

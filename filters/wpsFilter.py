@@ -941,6 +941,12 @@ def QGISProcessFactory(alg_name, project='', vectors=[], rasters=[], crss=[], wp
                     v.setValue(outputName)
                     outputFile = qgis.getReference(v)
                     args[v.identifier] = outputFile
+            elif parm.__class__.__name__ == 'OutputString':
+                s = result.get(v.identifier, None)
+                if s:
+                    args[v.identifier] = s.encode('utf8')
+                else:
+                    args[v.identifier] = None
             else:
                 args[v.identifier] = result.get(v.identifier, None)
         for k in self._outputs:
@@ -1040,9 +1046,10 @@ class wpsFilter(QgsServerFilter):
 
     def processWpsRequest(self, request, params):
         # prepare query
-        inputQuery = '&'.join(["%s=%s" % (k, params[k]) for k in params if k.lower(
+        inputQuery = u'&'.join([unicode(k)+u"="+unicode(params[k]) for k in params if k.lower(
         ) != 'map' and k.lower() != 'config' and k.lower != 'request_body'])
-        request_body = params.get('REQUEST_BODY', '')
+        inputQuery = inputQuery.encode('utf8')
+        request_body = unicode(params.get('REQUEST_BODY', ''))
 
         # get config
         configPath = os.getenv("PYWPS_CFG")
@@ -1294,7 +1301,6 @@ class wpsFilter(QgsServerFilter):
         except WPSException as e:
             QgsMessageLog.logMessage("WPSException: " + str(e))
             request.clearHeaders()
-            #request.setHeader('Content-type', 'text/xml')
             request.clearBody()
             request.setInfoFormat('text/xml')
             request.appendBody(str(e))
@@ -1304,7 +1310,6 @@ class wpsFilter(QgsServerFilter):
                 e,
                 ''.join(traceback.format_tb(exc_traceback)) + str(e)))
             request.clearHeaders()
-            #request.setHeader('Content-type', 'text/xml')
             request.clearBody()
             request.setInfoFormat('text/xml')
             request.appendBody(str(e))
