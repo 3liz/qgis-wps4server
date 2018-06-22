@@ -267,7 +267,7 @@ class LiteralInput(Input):
         """
 
         # ugly characters, only if string
-        if type(value) != types.BooleanType:
+        if value and type(value) != types.BooleanType:
             for char in self.restrictedCharacters:
                 if value.find(char) > -1:
                     raise Exceptions.InvalidParameterValue(value)
@@ -277,7 +277,9 @@ class LiteralInput(Input):
             if self.dataType == types.FloatType:
                 value = float(value)
             elif self.dataType == types.StringType:
-                if type(value) == types.StringType:
+                if not value:
+                    value = ''
+                elif type(value) == types.StringType:
                     value = value.decode('utf8')
                 else:
                     value = unicode(value)

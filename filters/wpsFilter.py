@@ -944,7 +944,10 @@ def QGISProcessFactory(alg_name, project='', vectors=[], rasters=[], crss=[], wp
             elif parm.__class__.__name__ == 'OutputString':
                 s = result.get(v.identifier, None)
                 if s:
-                    args[v.identifier] = s.encode('utf8')
+                    if type(s) == types.StringType:
+                        args[v.identifier] = s
+                    else:
+                        args[v.identifier] = s.encode('utf8')
                 else:
                     args[v.identifier] = None
             else:
