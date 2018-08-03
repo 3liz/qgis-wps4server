@@ -918,6 +918,50 @@ def QGISProcessFactory(alg_name, project='', vectors=[], rasters=[], crss=[], wp
                 if not outputName:
                     return 'No output file'
                 # get output file info
+                outputInfo = None
+                if outputName.startswith('NETCDF:'):
+                    # extract NETCDF info
+                    output_path = outputName[7:outputName.rfind(':')]
+                    if output_path.startswith('"'):
+                        output_path = input_path[1:-1]
+                    if output_path.startswith("'"):
+                        output_path = input_path[1:-1]
+                    output_dirname = os.path.dirname(output_path)
+                    output_basename = os.path.basename(output_path)
+                    band_name = outputName[outputName.rfind(':'):]
+                    if band_name.startswith('"'):
+                        band_name = band_name[1:]
+                    if band_name.startswith("'"):
+                        band_name = band_name[1:]
+
+                    # build TIF file path
+                    output_file_name = output_basename[:output_basename.find('.')]+'-'+band_name+'.tif'
+                    output_file = os.path.join(output_dirname, output_file_name)
+
+                    # Export NETCDF band layer to TIF
+                    outputLayer = QgsRasterLayer(outputName, band_name, 'gdal')
+                    outputProvider = outputLayer.dataProvider()
+                    # The ratser writer
+                    w = QgsRasterFileWriter(output_file)
+                    # The pipe
+                    pipe = QgsRasterPipe()
+                    pipe.set(outputProvider.clone())
+                    # The projector
+                    projector = QgsRasterProjector()
+                    projector.setCRS(outputProvider.crs(), outputProvider.crs())
+                    pipe.insert(2, projector)
+                    # Write the NETCDF band into the TIF
+                    w.writeRaster(
+                        pipe,
+                        outputProvider.xSize(),
+                        outputProvider.ySize(),
+                        outputProvider.extent(),
+                        outputProvider.crs())
+                    # delete writer to be sure the TIF has been fully written
+                    del w
+                    # update the output name
+                    outputName = output_file
+                # get file info
                 outputInfo = QFileInfo(outputName)
                 # get the output QGIS vector layer
                 outputLayer = QgsRasterLayer(
