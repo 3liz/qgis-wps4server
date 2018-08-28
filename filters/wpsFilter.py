@@ -923,9 +923,9 @@ def QGISProcessFactory(alg_name, project='', vectors=[], rasters=[], crss=[], wp
                     # extract NETCDF info
                     output_path = outputName[7:outputName.rfind(':')]
                     if output_path.startswith('"'):
-                        output_path = input_path[1:-1]
+                        output_path = output_path[1:-1]
                     if output_path.startswith("'"):
-                        output_path = input_path[1:-1]
+                        output_path = output_path[1:-1]
                     output_dirname = os.path.dirname(output_path)
                     output_basename = os.path.basename(output_path)
                     band_name = outputName[outputName.rfind(':'):]
