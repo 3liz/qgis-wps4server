@@ -412,6 +412,7 @@ def QGISProcessFactory(alg_name, project='', vectors=[], rasters=[], crss=[], wp
                                                                    type=types.StringType,
                                                                    default=getattr(parm, 'default', None))
                 self._inputs['Input%s' % i].values = [o and o.encode('utf8') or o for o in parm.options]
+                self._inputs['Input%s' % i].restrictedCharacters = ['\\', "#", "&", "!"]
 
             elif parm.__class__.__name__ == 'ParameterRange':
                 # parm.default can be None!!!!
@@ -445,6 +446,8 @@ def QGISProcessFactory(alg_name, project='', vectors=[], rasters=[], crss=[], wp
                                                                    default=getattr(parm, 'default', None))
                 if parm.__class__.__name__ == 'ParameterBoolean':
                     self._inputs['Input%s' % i].values = (True, False)
+                if type == types.StringType:
+                    self._inputs['Input%s' % i].restrictedCharacters = ['\\', "#", "&", "!"]
 
             i += 1
         i = 1
