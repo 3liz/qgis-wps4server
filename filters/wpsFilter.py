@@ -139,7 +139,7 @@ def QGISProcessFactory(alg_name, project='', vectors=[], rasters=[], crss=[], wp
     class_name = alg_name.replace(':', '_')
     alg = Processing.getAlgorithm(alg_name)
 
-    alg_title = escape(alg.name).replace('\\', '')
+    alg_title = escape(unicode(alg.name).encode('utf-8')).replace('\\', '')
     alg_desc = ''
     param_titles = {}
     # Extract title and description from Help file
@@ -161,11 +161,10 @@ def QGISProcessFactory(alg_name, project='', vectors=[], rasters=[], crss=[], wp
 
     # Get help if not provided by file and clean description
     if not alg_desc:
-        alg_desc = alg.shortHelp()
+        alg_desc = unicode(alg.shortHelp()).encode('utf-8')
     if not alg_desc:
         alg_desc = ''
     else:
-        alg_desc = re.sub(r'[^\x00-\x7F]', '@', alg_desc)
         alg_desc = alg_desc.replace('<p></p>', '')
         alg_desc = '<![CDATA[' + alg_desc + ']]>'
 
