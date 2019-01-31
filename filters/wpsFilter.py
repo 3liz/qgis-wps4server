@@ -930,7 +930,7 @@ def QGISProcessFactory(alg_name, project='', vectors=[], rasters=[], crss=[], wp
                         output_path = output_path[1:-1]
                     output_dirname = os.path.dirname(output_path)
                     output_basename = os.path.basename(output_path)
-                    band_name = outputName[outputName.rfind(':'):]
+                    band_name = outputName[outputName.rfind(':')+1:]
                     if band_name.startswith('"'):
                         band_name = band_name[1:]
                     if band_name.startswith("'"):
