@@ -110,6 +110,9 @@ class QGIS:
         if not outputLayer.dataProvider().crs().authid() and output.projection:
             outputLayer.setCrs(QgsCoordinateReferenceSystem(output.projection))
 
+        if hasattr(output, 'layername') and output.layername:
+            outputLayer.setTitle(output.layername)
+
         treeRoot = self.project.layerTreeRoot()
         if config.config.has_section('qgis') and config.config.has_option('qgis', 'output_ows_crss'):
             outputOWSCRSs = config.getConfigValue('qgis', 'output_ows_crss')

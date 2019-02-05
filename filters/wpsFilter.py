@@ -978,6 +978,7 @@ def QGISProcessFactory(alg_name, project='', vectors=[], rasters=[], crss=[], wp
                 if inputCrs and not outputLayer.dataProvider().crs().authid():
                     outputLayer.setCrs(inputCrs)
                     v.projection = 'proj4:' + inputCrs.toProj4()
+                v.layername = outputInfo.baseName()
                 args[v.identifier] = outputName
 
                 # get OWS getCapabilities URL
