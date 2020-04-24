@@ -1,6 +1,11 @@
 wps4server: QGIS Server Plugin to add OGC Web Processing Service capabilities
 ==============================================================================
 
+This plugin is not maintained anymore as it was for QGIS 2
+=======
+You should use https://github.com/3liz/py-qgis-wps
+=======
+
 Description
 ---------------
 
